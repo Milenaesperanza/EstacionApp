@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EstacionApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand: #1A1F2E;
+    --brand-accent: #00D68F;
+    --bici: #00B4D8;
+    --parking: #F5A623;
+    --surface: #FFFFFF;
+    --surface2: #F4F5F7;
+    --text: #1A1F2E;
+    --text2: #6B7280;
+    --border: rgba(26,31,46,0.1);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.16);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface2);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ── APP SHELL ── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── CLIMA ── */
+  #clima-strip {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 1001;
+    background: rgba(26,31,46,0.92);
+    backdrop-filter: blur(8px);
+    padding: 8px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    transform: translateY(-100%);
+    transition: transform 0.4s ease;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  #clima-strip.visible { transform: translateY(0); }
+  .cs-left { display: flex; align-items: center; gap: 8px; }
+  .cs-icon { font-size: 18px; }
+  .cs-temp { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 16px; color: white; }
+  .cs-desc { font-size: 11px; color: rgba(255,255,255,0.5); }
+  .cs-right { font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; }
+  #clima-strip.lluvia { background: rgba(43,127,255,0.85); }
+
+  /* ── HEADER ── */
+  #header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 16px 16px 0;
+    transition: top 0.4s ease;
+  }
+  #header.with-clima { top: 40px; }
+
+  .header-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand);
+    color: #fff;
+    border-radius: 100px;
+    padding: 8px 14px 8px 10px;
+    flex-shrink: 0;
+  }
+  .logo-chip svg { width: 18px; height: 18px; }
+  .logo-chip span {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+  .logo-chip .accent { color: var(--brand-accent); }
+
+  /* Search bar */
+  .search-wrap {
+    flex: 1;
+    position: relative;
+  }
+  #search-input {
+    width: 100%;
+    height: 44px;
+    border-radius: 100px;
+    border: none;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 0 44px 0 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+  }
+  #search-input::placeholder { color: var(--text2); }
+  .search-btn {
+    position: absolute;
+    right: 4px; top: 4px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--brand-accent);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s;
+  }
+  .search-btn:active { transform: scale(0.93); }
+  .search-btn svg { width: 16px; height: 16px; }
+
+  /* Filter pills */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    flex-shrink: 0;
+  }
+  .pill-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .pill.active-auto   { background: #1A1F2E; border-color: #1A1F2E; color: #fff; }
+  .pill.active-moto   { background: #FF6B2B; border-color: #FF6B2B; color: #fff; }
+  .pill.active-bici-priv { background: #7B5EA7; border-color: #7B5EA7; color: #fff; }
+  .pill.active-ecobici { background: #00B4D8; border-color: #00B4D8; color: #fff; border-style: dashed; }
+  .pill.inactive { opacity: 0.38; }
+
+  /* ── MAP ── */
+  #map {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  /* Custom tile attribution */
+  .leaflet-control-attribution { display: none; }
+
+  /* ── LOCATE BUTTON ── */
+  #locate-btn {
+    position: absolute;
+    bottom: 200px;
+    right: 16px;
+    z-index: 900;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: none;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s;
+  }
+  #locate-btn:active { transform: scale(0.93); }
+  #locate-btn svg { width: 20px; height: 20px; }
+
+  /* ── FAB REGISTRO ── */
+  #fab-register {
+    position: absolute;
+    bottom: 256px;
+    right: 16px;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--brand-accent);
+    color: #1A1F2E;
+    border: none;
+    border-radius: 100px;
+    padding: 11px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+  #fab-register:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,214,143,0.35); }
+  #fab-register:active { transform: scale(0.96); }
+  #fab-register svg { width: 15px; height: 15px; flex-shrink: 0; }
+  #fab-register.logged-in {
+    background: var(--surface);
+    color: var(--text);
+    padding: 0;
+    width: 46px; height: 46px;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* ── TAB BAR ── */
+  #tab-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1100;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #tab-bar.visible { display: grid; }
+
+  .tab-item {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; padding: 10px 0;
+    cursor: pointer; border: none; background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 600;
+    color: var(--text2);
+    transition: color 0.15s;
+    position: relative;
+  }
+  .tab-item.active { color: var(--brand); }
+  .tab-item svg { width: 22px; height: 22px; }
+  .tab-badge {
+    position: absolute; top: 6px; right: calc(50% - 16px);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #EF4444; border: 2px solid var(--surface);
+  }
+
+  /* Panels del perfil */
+  .profile-panel {
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    z-index: 1050;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-bottom: 70px;
+  }
+  .profile-panel.active { display: flex; }
+
+  .panel-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .panel-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 20px; letter-spacing: -0.3px;
+  }
+
+  /* Perfil header */
+  .profile-hero {
+    background: var(--brand);
+    padding: 28px 20px 24px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .profile-av {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--brand-accent); border: 3px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800; font-size: 22px; color: var(--brand);
+    flex-shrink: 0;
+  }
+  .profile-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: white; letter-spacing: -0.3px; }
+  .profile-email { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  .profile-section { padding: 16px 20px 0; }
+  .profile-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 8px; }
+
+  .profile-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row:active { opacity: 0.6; }
+  .profile-row-ico {
+    width: 38px; height: 38px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .profile-row-body { flex: 1; }
+  .profile-row-name { font-size: 15px; font-weight: 600; }
+  .profile-row-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .profile-row-arrow { color: var(--text2); font-size: 16px; }
+
+  /* Reserva activa card */
+  .reserva-activa-card {
+    margin: 16px 20px 0;
+    background: var(--brand);
+    border-radius: var(--radius);
+    padding: 16px;
+    color: white;
+  }
+  .rac-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+  .rac-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: -0.3px; }
+  .rac-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .rac-code { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; color: var(--brand-accent); }
+  .rac-timer { font-size: 12px; color: rgba(255,255,255,0.6); }
+  .rac-btn { background: var(--brand-accent); color: var(--brand); font-size: 13px; font-weight: 700; padding: 8px 16px; border-radius: 100px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 12px; width: 100%; }
+
+  /* Favoritos */
+  .fav-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s;
+  }
+  .fav-card:active { background: var(--surface2); }
+  .fav-ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .fav-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .fav-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .fav-star { color: #F5A623; font-size: 16px; }
+
+  /* Historial */
+  .hist-card {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .hist-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .hist-name { font-size: 14px; font-weight: 600; }
+  .hist-precio { font-size: 14px; font-weight: 700; color: var(--brand); }
+  .hist-sub { font-size: 12px; color: var(--text2); }
+  .hist-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-top: 6px; }
+  .hist-ok { background: #E8FBF2; color: #059669; }
+  .hist-local { background: #F0EEFF; color: #7B5EA7; }
+
+  /* Vehículos */
+  .veh-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .veh-ico { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .veh-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .veh-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .veh-default { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; background: var(--brand); color: white; }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; color: var(--brand-accent);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    border: none; background: none; font-family: 'DM Sans', sans-serif;
+    width: 100%;
+  }
+
+  /* ── STATS BAR ── */
+  #stats-bar {
+    position: absolute;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    display: flex;
+    gap: 8px;
+  }
+  body.has-tabbar #stats-bar { bottom: 210px; }
+  body.has-tabbar #locate-btn { bottom: 270px; }
+  body.has-tabbar #fab-register { display: none; }
+  body.has-tabbar #bottom-sheet.hidden { transform: translateY(calc(100% - 180px)); }
+  .stat-chip {
+    background: var(--surface);
+    border-radius: 100px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── PANEL DETALLE RESERVA ── */
+  #panel-detalle-reserva {
+    position: absolute; inset: 0; z-index: 1060;
+    background: var(--surface); display: none;
+    flex-direction: column; overflow-y: auto;
+    padding-bottom: 80px;
+  }
+  #panel-detalle-reserva.active { display: flex; }
+  .dr-header {
+    background: var(--brand); padding: 20px 20px 24px;
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .dr-back {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: none;
+    color: white; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .dr-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; color: white; letter-spacing: -0.3px; }
+  .dr-addr { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .dr-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .dr-code-wrap { background: var(--brand); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .dr-code-label { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dr-code { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 36px; letter-spacing: 6px; color: var(--brand-accent); }
+  .dr-code-hint { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .dr-qr {
+    width: 120px; height: 120px; background: white; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; margin: 4px auto 0;
+  }
+  .dr-qr-pattern {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(0deg,#1A1F2E 0,#1A1F2E 6px,transparent 6px,transparent 12px),repeating-linear-gradient(90deg,#1A1F2E 0,#1A1F2E 6px,transparent 6px,transparent 12px);
+    background-size: 12px 12px; opacity: 0.12;
+  }
+  .dr-qr-ico { position: relative; font-size: 32px; }
+  .dr-info { background: var(--surface2); border-radius: var(--radius); overflow: hidden; }
+  .dr-info-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .dr-info-row:last-child { border-bottom: none; }
+  .dr-info-label { color: var(--text2); }
+  .dr-info-val { font-weight: 600; }
+  .dr-nav-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 52px; border-radius: 100px; background: var(--brand); border: none; color: white; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: transform 0.15s; }
+  .dr-nav-btn:active { transform: scale(0.98); }
+  .dr-cancel-link { text-align: center; margin-top: 8px; }
+  .dr-cancel-link span { font-size: 12px; color: var(--text2); text-decoration: underline; cursor: pointer; }
+
+  /* ── MODAL CANCELACIÓN ── */
+  #modal-cancelar {
+    position: absolute; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,0.5);
+    display: none; align-items: flex-end;
+    backdrop-filter: blur(2px);
+  }
+  #modal-cancelar.open { display: flex; }
+  .modal-sheet {
+    background: var(--surface); width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 40px;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.3px; margin-bottom: 8px; }
+  .modal-sub { font-size: 14px; color: var(--text2); line-height: 1.5; margin-bottom: 20px; }
+  .modal-card { background: var(--surface2); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 20px; }
+  .modal-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .modal-row:last-child { border: none; }
+  .modal-row-label { color: var(--text2); }
+  .modal-row-val { font-weight: 600; }
+  .refund-note { background: rgba(0,214,143,0.08); border: 1px solid rgba(0,214,143,0.2); border-radius: 10px; padding: 12px 14px; font-size: 13px; font-weight: 600; color: #059669; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .btn-cancelar-confirm { width: 100%; height: 52px; border-radius: 100px; background: #EF4444; border: none; color: white; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: transform 0.15s; }
+  .btn-cancelar-confirm:active { transform: scale(0.98); }
+  .btn-cancelar-back { width: 100%; height: 48px; border-radius: 100px; border: 1.5px solid var(--border); background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+  /* ── BOTTOM SHEET ── */
+  #bottom-sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(0);
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #bottom-sheet.hidden { transform: translateY(calc(100% - 110px)); }
+
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+    cursor: pointer;
+  }
+
+  /* ── NEARBY LIST (default state) ── */
+  #nearby-view { padding: 0 16px 24px; }
+  .nearby-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    padding: 14px 0 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .place-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.1s;
+  }
+  .place-card:last-child { border-bottom: none; }
+  .place-card:active { opacity: 0.7; }
+
+  .place-icon {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+  .icon-parking { background: #FEF3E2; }
+  .icon-bici { background: #E0F7FF; }
+
+  .place-info { flex: 1; min-width: 0; }
+  .place-name {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .place-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  .place-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .place-dist {
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .place-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 100px;
+    margin-top: 4px;
+  }
+  .badge-ok { background: #E6FAF3; color: #059669; }
+  .badge-few { background: #FEF9E7; color: #D97706; }
+  .badge-no { background: #FEEBEB; color: #DC2626; }
+
+  /* ── DETAIL VIEW ── */
+  #detail-view { display: none; padding: 0 16px 32px; }
+  #detail-view.active { display: block; }
+  #nearby-view.hidden { display: none; }
+
+  .detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0 12px;
+  }
+  .detail-icon {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 26px;
+  }
+  .detail-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .detail-addr {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .back-btn {
+    position: absolute;
+    top: 20px; right: 16px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--text2);
+    transition: all 0.15s;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 4px 0 16px;
+  }
+  .info-block {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+  .info-label {
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+  .info-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin-top: 2px;
+    letter-spacing: -0.5px;
+  }
+  .info-unit {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+  }
+
+  /* Availability bar */
+  .avail-bar-wrap { margin: 0 0 16px; }
+  .avail-bar-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .avail-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .avail-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  /* Horario */
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row-label { color: var(--text2); font-size: 13px; }
+  .detail-row-val { font-weight: 500; }
+
+  /* CTA button */
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--brand);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .cta-btn:active { transform: scale(0.98); background: #2d3448; }
+  .cta-btn svg { width: 18px; height: 18px; }
+  .cta-btn.secondary {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    margin-top: 10px;
+  }
+
+  /* ── MAP MARKERS (custom) ── */
+  .marker-parking, .marker-bici {
+    width: 36px; height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+    border: 2.5px solid #fff;
+    cursor: pointer;
+  }
+  .marker-parking { background: var(--parking, #F5A623); }
+  .marker-bici { background: var(--bici, #00B4D8); }
+  .marker-inner {
+    transform: rotate(45deg);
+    font-size: 14px;
+    line-height: 1;
+  }
+  .marker-user {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #4F6AFF;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 4px rgba(79,106,255,0.25);
+  }
+
+  /* Pulse anim for user location */
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(79,106,255,0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(79,106,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(79,106,255,0); }
+  }
+  .marker-user { animation: pulse 2s infinite; }
+
+  /* Search suggestions */
+  #suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    margin-top: 4px;
+    overflow: hidden;
+    display: none;
+    z-index: 2000;
+  }
+  #suggestions.active { display: block; }
+  .suggestion-item {
+    padding: 11px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover { background: var(--surface2); }
+  .suggestion-item strong { font-weight: 600; }
+  .suggestion-item span { color: var(--text2); }
+
+  /* Toast */
+  #toast {
+    position: absolute;
+    bottom: 155px;
+    left: 50%; transform: translateX(-50%);
+    background: var(--brand);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 100px;
+    z-index: 2000;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+
+  /* API notice */
+  #api-banner {
+    position: absolute;
+    top: 120px; left: 12px; right: 12px;
+    background: #1A1F2E;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow);
+  }
+  #api-banner .banner-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--brand-accent);
+    flex-shrink: 0;
+    animation: pulse 1.5s infinite;
+  }
+  #close-banner {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="map"></div>
+  <div id="clima-strip">
+    <div class="cs-left">
+      <div class="cs-icon" id="cs-icon">⛅</div>
+      <div>
+        <div class="cs-temp" id="cs-temp">--°</div>
+        <div class="cs-desc" id="cs-desc">Buenos Aires</div>
+      </div>
+    </div>
+    <div class="cs-right" id="cs-right">Humedad --% · --km/h</div>
+  </div>
+
+  <!-- API Banner -->
+  <div id="api-banner">
+    <div class="banner-dot"></div>
+    <span>Modo demo — datos de CABA simulados. Listo para conectar API GCBA.</span>
+    <button id="close-banner">✕</button>
+  </div>
+
+  <!-- Header -->
+  <div id="header">
+    <div class="header-bar">
+      <div class="logo-chip">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Pin body -->
+          <path d="M12 2C8.69 2 6 4.69 6 8c0 4.5 6 14 6 14s6-9.5 6-14c0-3.31-2.69-6-6-6z" fill="#00D68F"/>
+          <!-- Inner circle -->
+          <circle cx="12" cy="8" r="3.5" fill="#1A1F2E"/>
+          <!-- P letter centered in circle -->
+          <text x="10.3" y="10.6" font-family="Georgia,serif" font-weight="900" font-size="5.5" fill="white">P</text>
+        </svg>
+        <span>Estacion<span class="accent">App</span></span>
+      </div>
+      <div class="search-wrap">
+        <input id="search-input" type="text" placeholder="Buscar dirección en CABA...">
+        <div id="suggestions"></div>
+        <button class="search-btn" id="search-btn" aria-label="Buscar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="pill active-auto" id="pill-auto" onclick="toggleFilter('auto')">🚗 Auto</div>
+      <div class="pill active-moto" id="pill-moto" onclick="toggleFilter('moto')">🏍️ Moto</div>
+      <div class="pill active-bici-priv" id="pill-bici-priv" onclick="toggleFilter('bici-priv')">🚲 Bici</div>
+      <div class="pill active-ecobici" id="pill-ecobici" onclick="toggleFilter('ecobici')">⊹ EcoBici</div>
+    </div>
+  </div>
+
+  <!-- Locate -->
+  <button id="locate-btn" onclick="centerMap()" aria-label="Mi ubicación">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+      <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
+    </svg>
+  </button>
+
+  <!-- FAB Registro -->
+  <button id="fab-register" onclick="openRegister()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+    Guardá tus lugares
+  </button>
+
+  <!-- Stats -->
+  <div id="stats-bar">
+    <div class="stat-chip">
+      <div class="stat-dot" style="background:var(--parking)"></div>
+      <span id="stats-parking">12 disponibles</span>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-dot" style="background:var(--bici)"></div>
+      <span id="stats-bici">8 estaciones</span>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet -->
+  <div id="bottom-sheet" class="hidden">
+    <div class="sheet-handle" id="sheet-handle"></div>
+
+    <!-- Nearby view -->
+    <div id="nearby-view">
+      <div class="nearby-title">Cerca de vos</div>
+      <div id="place-list"></div>
+    </div>
+
+    <!-- Detail view -->
+    <div id="detail-view">
+      <button class="back-btn" onclick="closeDetail()">✕</button>
+      <div class="detail-header">
+        <div class="detail-icon" id="detail-icon"></div>
+        <div>
+          <div class="detail-title" id="detail-name"></div>
+          <div class="detail-addr" id="detail-addr"></div>
+        </div>
+      </div>
+      <div class="info-grid" id="detail-grid"></div>
+      <div class="avail-bar-wrap" id="avail-wrap"></div>
+      <div id="detail-rows"></div>
+      <button class="cta-btn" id="cta-reservar" onclick="openReserva()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Reservar lugar
+      </button>
+      <button class="cta-btn secondary" id="cta-nav" onclick="openNavigation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+        Cómo llegar
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div id="tab-bar">
+    <button class="tab-item active" id="tab-mapa" onclick="switchTab('mapa')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+      Mapa
+    </button>
+    <button class="tab-item" id="tab-favoritos" onclick="switchTab('favoritos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Favoritos
+    </button>
+    <button class="tab-item" id="tab-reservas" onclick="switchTab('reservas')">
+      <div class="tab-badge" id="tab-badge" style="display:none"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </button>
+    <button class="tab-item" id="tab-perfil" onclick="switchTab('perfil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </button>
+  </div>
+
+  <!-- PANEL: FAVORITOS -->
+  <div class="profile-panel" id="panel-favoritos">
+    <div class="panel-header">
+      <div class="panel-title">Favoritos</div>
+    </div>
+    <div id="fav-list"></div>
+  </div>
+
+  <!-- PANEL: RESERVAS -->
+  <div class="profile-panel" id="panel-reservas">
+    <div class="panel-header">
+      <div class="panel-title">Mis reservas</div>
+    </div>
+    <div id="reservas-activa"></div>
+    <div class="profile-section" style="margin-top:8px">
+      <div class="profile-section-title">Historial</div>
+    </div>
+    <div id="reservas-historial"></div>
+  </div>
+
+  <!-- PANEL: PERFIL -->
+  <div class="profile-panel" id="panel-perfil">
+    <div class="profile-hero" id="profile-hero"></div>
+
+    <div class="profile-section" style="margin-top:16px">
+      <div class="profile-section-title">Mis vehículos</div>
+    </div>
+    <div id="veh-list"></div>
+    <button class="add-btn" onclick="showToast('Próximamente')">+ Agregar vehículo</button>
+
+    <div class="profile-section" style="margin-top:8px">
+      <div class="profile-section-title">Cuenta</div>
+    </div>
+    <div style="padding: 0 20px">
+      <div class="profile-row" onclick="showToast('Próximamente')">
+        <div class="profile-row-ico" style="background:#F4F5F7">⚙️</div>
+        <div class="profile-row-body">
+          <div class="profile-row-name">Configuración</div>
+          <div class="profile-row-sub">Notificaciones, privacidad</div>
+        </div>
+        <span class="profile-row-arrow">›</span>
+      </div>
+      <div class="profile-row" onclick="cerrarSesion()">
+        <div class="profile-row-ico" style="background:#FEF2F2">🚪</div>
+        <div class="profile-row-body">
+          <div class="profile-row-name" style="color:#DC2626">Cerrar sesión</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DETALLE RESERVA -->
+  <div id="panel-detalle-reserva">
+    <div class="dr-header">
+      <button class="dr-back" onclick="cerrarDetalleReserva()">←</button>
+      <div>
+        <div class="dr-title" id="dr-nombre"></div>
+        <div class="dr-addr" id="dr-addr"></div>
+      </div>
+    </div>
+    <div class="dr-body">
+      <div class="dr-code-wrap">
+        <div class="dr-code-label">Tu código de reserva</div>
+        <div class="dr-code" id="dr-code"></div>
+        <div class="dr-qr">
+          <div class="dr-qr-pattern"></div>
+          <div class="dr-qr-ico">🅿️</div>
+        </div>
+        <div class="dr-code-hint">Mostrá este código al encargado al llegar</div>
+      </div>
+      <div class="dr-info" id="dr-info"></div>
+      <button class="dr-nav-btn" id="dr-nav-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+        Cómo llegar
+      </button>
+      <div class="dr-cancel-link">
+        <span onclick="cerrarDetalleReserva(); abrirModalCancelar()">cancelar reserva</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CANCELAR RESERVA -->
+  <div id="modal-cancelar">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">¿Cancelar tu reserva?</div>
+      <div class="modal-sub">Una vez cancelada, el lugar queda disponible para otros conductores.</div>
+      <div class="modal-card" id="modal-reserva-info"></div>
+      <div class="refund-note" id="modal-refund" style="display:none">
+        💚 El reintegro se acreditará en tu Mercado Pago en 24-72hs hábiles.
+      </div>
+      <button class="btn-cancelar-confirm" onclick="confirmarCancelacion()">Sí, cancelar reserva</button>
+      <button class="btn-cancelar-back" onclick="cerrarModalCancelar()">Volver</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+// ─── MOCK DATA ───────────────────────────────────────────────────────────────
+// Swap MOCK_PARKING con: GET https://apitransporte.buenosaires.gob.ar/transito/estacionamiento
+// Swap MOCK_ECOBICI con: GET https://apitransporte.buenosaires.gob.ar/ecobici/gbfs/stationStatus
+// Auth: ?client_id=CLIENT_ID&client_secret=CLIENT_SECRET
+
+const CENTER = [-34.6037, -58.3816]; // Plaza de Mayo
+
+// vehiculos: array con 'auto','moto','bici-priv' — define qué acepta cada comercio
+const MOCK_PARKING = [
+  { id:'p1', name:'Estacionamiento Microcentro Norte', addr:'Florida 800, CABA', lat:-34.5990, lng:-58.3742, libre:34, total:120, tarifa:{auto:800, moto:400}, horario:'24hs', tipo:'Cubierto', vehiculos:['auto','moto'], pagoenapp:true, reserva:['inmediata','mismo-dia'], calculo:'horas' },
+  { id:'p2', name:'Parking Puerto Madero', addr:'Alicia Moreau de Justo 1020', lat:-34.6121, lng:-58.3631, libre:12, total:85, tarifa:{auto:650, moto:350, 'bici-priv':150}, horario:'06:00–02:00', tipo:'Cubierto', vehiculos:['auto','moto','bici-priv'], pagoenapp:false, reserva:['inmediata'], calculo:'salida' },
+  { id:'p3', name:'Estacionamiento San Telmo', addr:'Defensa 755, CABA', lat:-34.6192, lng:-58.3722, libre:0, total:60, tarifa:{auto:550}, horario:'07:00–23:00', tipo:'Descubierto', vehiculos:['auto'], pagoenapp:false, reserva:['inmediata'], calculo:'horas' },
+  { id:'p4', name:'Palermo Soho Parking', addr:'Thames 1650, Palermo', lat:-34.5894, lng:-58.4215, libre:57, total:95, tarifa:{auto:700, moto:380, 'bici-priv':200}, horario:'24hs', tipo:'Cubierto', vehiculos:['auto','moto','bici-priv'], pagoenapp:true, reserva:['inmediata','mismo-dia','anticipada'], calculo:'horas' },
+  { id:'p5', name:'Centro Cívico Estacionamiento', addr:'Av. de Mayo 600, CABA', lat:-34.6088, lng:-58.3892, libre:89, total:200, tarifa:{auto:500, moto:300}, horario:'07:00–21:00', tipo:'Cubierto', vehiculos:['auto','moto'], pagoenapp:true, reserva:['anticipada','mismo-dia'], calculo:'horas' },
+  { id:'p6', name:'Parking Recoleta', addr:'Posadas 1200, Recoleta', lat:-34.5879, lng:-58.3949, libre:3, total:75, tarifa:{auto:900, moto:450, 'bici-priv':250}, horario:'24hs', tipo:'Cubierto', vehiculos:['auto','moto','bici-priv'], pagoenapp:true, reserva:['inmediata','mismo-dia','anticipada'], calculo:'salida' },
+  { id:'p7', name:'BikeGarage Palermo', addr:'Gorriti 4200, Palermo', lat:-34.5868, lng:-58.4180, libre:8, total:20, tarifa:{'bici-priv':180}, horario:'08:00–22:00', tipo:'Cubierto', vehiculos:['bici-priv'], pagoenapp:true, reserva:['inmediata','mismo-dia'], calculo:'horas' },
+  { id:'p8', name:'Moto Parking Congreso', addr:'Rivadavia 1800, CABA', lat:-34.6105, lng:-58.3950, libre:15, total:30, tarifa:{moto:320}, horario:'07:00–23:00', tipo:'Descubierto', vehiculos:['moto'], pagoenapp:false, reserva:['inmediata'], calculo:'horas' },
+];
+
+const MOCK_ECOBICI = [
+  { id:'b1', name:'Estación EcoBici 001', addr:'Av. 9 de Julio y Corrientes', lat:-34.6034, lng:-58.3819, biciDisp:8, totalDoc:15, totalBici:20, vehiculos:['ecobici'] },
+  { id:'b2', name:'Estación EcoBici 017', addr:'Puerto Madero – Dique 1', lat:-34.6099, lng:-58.3647, biciDisp:12, totalDoc:15, totalBici:15, vehiculos:['ecobici'] },
+  { id:'b3', name:'Estación EcoBici 043', addr:'Plaza Dorrego, San Telmo', lat:-34.6207, lng:-58.3698, biciDisp:3, totalDoc:10, totalBici:12, vehiculos:['ecobici'] },
+  { id:'b4', name:'Estación EcoBici 089', addr:'Av. del Libertador y Sarmiento', lat:-34.5781, lng:-58.4108, biciDisp:15, totalDoc:20, totalBici:20, vehiculos:['ecobici'] },
+  { id:'b5', name:'Estación EcoBici 112', addr:'Parque Centenario', lat:-34.6052, lng:-58.4354, biciDisp:0, totalDoc:8, totalBici:8, vehiculos:['ecobici'] },
+  { id:'b6', name:'Estación EcoBici 056', addr:'Av. Corrientes 1800, Balvanera', lat:-34.6021, lng:-58.3977, biciDisp:6, totalDoc:12, totalBici:12, vehiculos:['ecobici'] },
+  { id:'b7', name:'Estación EcoBici 022', addr:'Plaza de Mayo, acceso norte', lat:-34.6083, lng:-58.3712, biciDisp:10, totalDoc:15, totalBici:18, vehiculos:['ecobici'] },
+  { id:'b8', name:'Estación EcoBici 077', addr:'Parque Lezama, San Telmo', lat:-34.6303, lng:-58.3672, biciDisp:4, totalDoc:10, totalBici:10, vehiculos:['ecobici'] },
+];
+
+const ADDRESSES = [
+  'Av. Corrientes 1200, CABA','Florida 500, Microcentro','Av. 9 de Julio 1100, CABA',
+  'Av. Santa Fe 3000, Palermo','Defensa 800, San Telmo','Av. del Libertador 1500, Recoleta',
+  'Av. de Mayo 700, CABA','Lavalle 400, Microcentro','Av. Callao 1000, Balvanera',
+  'Suipacha 900, Microcentro',
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+// activeFilters: set de filtros activos — 'auto','moto','bici-priv','ecobici'
+const activeFilters = new Set(['auto','moto','bici-priv','ecobici']);
+let allMarkers = [];
+let userMarker = null;
+let selectedPlace = null;
+let sheetOpen = false;
+let navTarget = null;
+
+// colores y emojis por tipo de vehículo
+const VEHICULO = {
+  'auto':     { color:'#1A1F2E', emoji:'🚗', label:'Auto' },
+  'moto':     { color:'#FF6B2B', emoji:'🏍️', label:'Moto' },
+  'bici-priv':{ color:'#7B5EA7', emoji:'🚲', label:'Bici' },
+  'ecobici':  { color:'#00B4D8', emoji:'⊹',  label:'EcoBici', dashed:true },
+};
+
+// ─── MAP INIT ─────────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: CENTER,
+  zoom: 14,
+  zoomControl: false,
+  attributionControl: false,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19,
+}).addTo(map);
+
+// ─── CUSTOM ICONS ─────────────────────────────────────────────────────────────
+// Muestra el color+emoji del primer vehículo activo que acepta el lugar (opción B)
+function makeIcon(place) {
+  const filtroActivo = ['auto','moto','bici-priv','ecobici'].find(f => activeFilters.has(f) && place.vehiculos.includes(f));
+  const v = VEHICULO[filtroActivo || place.vehiculos[0]];
+  const border = v.dashed ? '2px dashed #fff' : '2.5px solid #fff';
+  const html = `<div style="
+    width:36px;height:36px;border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);background:${v.color};
+    border:${border};box-shadow:0 3px 10px rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;">
+    <span style="transform:rotate(45deg);font-size:13px;line-height:1">${v.emoji}</span>
+  </div>`;
+  return L.divIcon({ html, className: '', iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36] });
+}
+
+const userIcon = L.divIcon({
+  html: `<div style="width:16px;height:16px;border-radius:50%;background:#4F6AFF;border:3px solid #fff;box-shadow:0 0 0 4px rgba(79,106,255,.25);animation:pulse 2s infinite"></div>`,
+  className: '', iconSize: [16,16], iconAnchor: [8,8]
+});
+
+// ─── RENDER MARKERS ───────────────────────────────────────────────────────────
+function renderMarkers() {
+  allMarkers.forEach(m => map.removeLayer(m));
+  allMarkers = [];
+
+  const allPlaces = [
+    ...MOCK_PARKING.map(p => ({ ...p, _cat:'parking' })),
+    ...MOCK_ECOBICI.map(b => ({ ...b, _cat:'ecobici' })),
+  ];
+
+  allPlaces.forEach(place => {
+    // Mostrar si al menos uno de sus vehículos está en el filtro activo
+    const visible = place.vehiculos.some(v => activeFilters.has(v));
+    if (!visible) return;
+    const m = L.marker([place.lat, place.lng], { icon: makeIcon(place) }).addTo(map);
+    m.on('click', (e) => { L.DomEvent.stopPropagation(e); openDetail(place, place._cat); });
+    allMarkers.push(m);
+  });
+
+  updateStats();
+}
+
+// ─── USER LOCATION ─────────────────────────────────────────────────────────
+// Simulated user position near Plaza de Mayo
+const USER_POS = [-34.6072, -58.3764];
+userMarker = L.marker(USER_POS, { icon: userIcon }).addTo(map);
+
+function centerMap() {
+  map.setView(USER_POS, 15, { animate: true });
+  showToast('Ubicación actualizada');
+}
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+function toggleFilter(type) {
+  if (activeFilters.has(type)) {
+    if (activeFilters.size === 1) return; // mínimo 1 filtro activo
+    activeFilters.delete(type);
+  } else {
+    activeFilters.add(type);
+  }
+  const pill = document.getElementById('pill-' + type);
+  pill.className = activeFilters.has(type) ? `pill active-${type}` : 'pill inactive';
+  renderMarkers();
+  buildNearbyList();
+}
+
+function updateStats() {
+  const privados = MOCK_PARKING.filter(p => p.vehiculos.some(v => activeFilters.has(v)));
+  const libres = privados.reduce((s, p) => s + p.libre, 0);
+  const ecoVisible = activeFilters.has('ecobici');
+  document.getElementById('stats-parking').textContent = `${libres} espacios libres`;
+  document.getElementById('stats-bici').textContent = ecoVisible ? `${MOCK_ECOBICI.length} est. EcoBici` : 'EcoBici oculta';
+}
+
+// ─── NEARBY LIST ─────────────────────────────────────────────────────────────
+function dist(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function badgeFor(place) {
+  if (place.vehiculos.includes('ecobici')) {
+    if (place.biciDisp === 0) return ['badge-no', 'Sin bicis'];
+    if (place.biciDisp <= 3) return ['badge-few', `${place.biciDisp} bicis`];
+    return ['badge-ok', `${place.biciDisp} bicis`];
+  }
+  if (place.libre === 0) return ['badge-no', 'Lleno'];
+  if (place.libre / place.total < 0.15) return ['badge-few', `${place.libre} libres`];
+  return ['badge-ok', `${place.libre} libres`];
+}
+
+function vehiculosTag(place) {
+  return place.vehiculos.filter(v => v !== 'ecobici').map(v => VEHICULO[v].emoji).join(' ') || '';
+}
+
+function buildNearbyList() {
+  const list = document.getElementById('place-list');
+  const combined = [
+    ...MOCK_PARKING.map(p => ({ ...p, _cat:'parking' })),
+    ...MOCK_ECOBICI.map(b => ({ ...b, _cat:'ecobici' })),
+  ].filter(p => p.vehiculos.some(v => activeFilters.has(v)))
+   .map(p => ({ ...p, _dist: dist(USER_POS[0], USER_POS[1], p.lat, p.lng) }))
+   .sort((a, b) => a._dist - b._dist)
+   .slice(0, 8);
+
+  list.innerHTML = combined.map(p => {
+    const [bClass, bLabel] = badgeFor(p);
+    const isEco = p._cat === 'ecobici';
+    const v = isEco ? VEHICULO['ecobici'] : VEHICULO[p.vehiculos.find(v => activeFilters.has(v)) || p.vehiculos[0]];
+    const iconBg = isEco ? '#E0F7FF' : (p.vehiculos[0]==='auto'?'#E8E9F0':p.vehiculos[0]==='moto'?'#FFF0EA':'#F0EBF8');
+    const sub = isEco ? `${p.totalDoc} docks` : `${vehiculosTag(p)} · ${Object.values(p.tarifa)[0]}`;
+    const d = p._dist < 1000 ? `${p._dist}m` : `${(p._dist/1000).toFixed(1)}km`;
+    return `<div class="place-card" onclick="openDetail(MOCK_DATA_ALL['${p.id}'], '${p._cat}')">
+      <div class="place-icon" style="background:${iconBg}">${v.emoji}</div>
+      <div class="place-info">
+        <div class="place-name">${p.name}</div>
+        <div class="place-sub">${sub}</div>
+      </div>
+      <div class="place-meta">
+        <div class="place-dist">${d}</div>
+        <div class="place-badge ${bClass}">${bLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const MOCK_DATA_ALL = {};
+[...MOCK_PARKING, ...MOCK_ECOBICI].forEach(p => MOCK_DATA_ALL[p.id] = p);
+
+// ─── DETAIL VIEW ──────────────────────────────────────────────────────────────
+function openDetail(place, type) {
+  selectedPlace = place;
+  navTarget = [place.lat, place.lng];
+
+  document.getElementById('detail-icon').className = `detail-icon ${type === 'parking' ? 'icon-parking' : 'icon-bici'}`;
+  document.getElementById('detail-icon').textContent = type === 'parking' ? '🅿️' : '🚲';
+  document.getElementById('detail-name').textContent = place.name;
+  document.getElementById('detail-addr').textContent = place.addr;
+
+  const grid = document.getElementById('detail-grid');
+  const availWrap = document.getElementById('avail-wrap');
+  const rows = document.getElementById('detail-rows');
+
+  if (type === 'parking') {
+    const pct = Math.round((place.libre / place.total) * 100);
+    const barColor = place.libre === 0 ? '#DC2626' : pct < 15 ? '#D97706' : '#059669';
+    grid.innerHTML = `
+      <div class="info-block">
+        <div class="info-label">Libres</div>
+        <div class="info-value" style="color:${barColor}">${place.libre}<span class="info-unit"> / ${place.total}</span></div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Tarifa</div>
+        <div class="info-value" style="font-size:17px">${place.tarifa}</div>
+      </div>`;
+    availWrap.innerHTML = `
+      <div class="avail-bar-label">
+        <span>Ocupación</span><span>${100-pct}% ocupado</span>
+      </div>
+      <div class="avail-bar">
+        <div class="avail-fill" style="width:${100-pct}%;background:${barColor}"></div>
+      </div>`;
+    rows.innerHTML = `
+      <div class="detail-row">
+        <span class="detail-row-label">Horario</span>
+        <span class="detail-row-val">${place.horario}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Tipo</span>
+        <span class="detail-row-val">${place.tipo}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Fuente</span>
+        <span class="detail-row-val" style="color:var(--brand-accent);font-size:12px">API GCBA Tránsito</span>
+      </div>`;
+  } else {
+    const pct = Math.round((place.biciDisp / place.totalBici) * 100);
+    const docDisp = place.totalDoc - (place.totalBici - place.biciDisp);
+    const barColor = place.biciDisp === 0 ? '#DC2626' : place.biciDisp <= 3 ? '#D97706' : '#00B4D8';
+    grid.innerHTML = `
+      <div class="info-block">
+        <div class="info-label">Bicis disp.</div>
+        <div class="info-value" style="color:${barColor}">${place.biciDisp}<span class="info-unit"> / ${place.totalBici}</span></div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Docks libres</div>
+        <div class="info-value">${Math.max(0, docDisp)}<span class="info-unit"> / ${place.totalDoc}</span></div>
+      </div>`;
+    availWrap.innerHTML = `
+      <div class="avail-bar-label">
+        <span>Bicicletas disponibles</span><span>${pct}%</span>
+      </div>
+      <div class="avail-bar">
+        <div class="avail-fill" style="width:${pct}%;background:${barColor}"></div>
+      </div>`;
+    rows.innerHTML = `
+      <div class="detail-row">
+        <span class="detail-row-label">Servicio</span>
+        <span class="detail-row-val">EcoBici GCBA</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Horario</span>
+        <span class="detail-row-val">24hs · Gratis</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-row-label">Fuente</span>
+        <span class="detail-row-val" style="color:var(--brand-accent);font-size:12px">API GCBA EcoBici GBFS</span>
+      </div>`;
+  }
+
+  document.getElementById('nearby-view').classList.add('hidden');
+  document.getElementById('detail-view').classList.add('active');
+  // Ocultar reservar para EcoBici
+  const esEco = place.vehiculos && place.vehiculos.includes('ecobici');
+  document.getElementById('cta-reservar').style.display = esEco ? 'none' : 'flex';
+
+  map.setView([place.lat, place.lng], 16, { animate: true });
+  openSheet();
+}
+
+function closeDetail() {
+  document.getElementById('detail-view').classList.remove('active');
+  document.getElementById('nearby-view').classList.remove('hidden');
+}
+
+function openReserva() {
+  if (!selectedPlace) return;
+  if (selectedPlace.vehiculos && selectedPlace.vehiculos.includes('ecobici')) {
+    showToast('EcoBici es gratuita, no requiere reserva');
+    return;
+  }
+  if (!currentUser) {
+    showToast('Necesitás una cuenta para reservar');
+    setTimeout(() => window.location.href = 'estacionapp-login.html', 1200);
+    return;
+  }
+  const params = encodeURIComponent(JSON.stringify(selectedPlace));
+  window.location.href = `estacionapp-reserva.html?lugar=${params}`;
+}
+
+function openNavigation() {
+  if (!navTarget) return;
+  const [lat, lng] = navTarget;
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+// ─── BOTTOM SHEET ─────────────────────────────────────────────────────────────
+function openSheet() {
+  document.getElementById('bottom-sheet').classList.remove('hidden');
+  sheetOpen = true;
+}
+
+document.getElementById('sheet-handle').addEventListener('click', () => {
+  const sheet = document.getElementById('bottom-sheet');
+  if (sheetOpen) {
+    sheet.classList.add('hidden');
+    sheetOpen = false;
+  } else {
+    sheet.classList.remove('hidden');
+    sheetOpen = true;
+  }
+});
+
+map.on('click', () => {
+  closeDetail();
+  document.getElementById('bottom-sheet').classList.add('hidden');
+  sheetOpen = false;
+});
+
+// ─── SEARCH ───────────────────────────────────────────────────────────────────
+const searchInput = document.getElementById('search-input');
+const suggestionsEl = document.getElementById('suggestions');
+let searchTimeout = null;
+let currentResults = [];
+
+searchInput.addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  if (q.length < 3) { suggestionsEl.classList.remove('active'); return; }
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => fetchSuggestions(q), 350);
+});
+
+async function fetchSuggestions(q) {
+  try {
+    const url = `https://ws.usig.buenosaires.gob.ar/rest/normalizar_y_geocodificar_direcciones?direccion=${encodeURIComponent(q)}&desambiguar=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    currentResults = [];
+    let items = [];
+
+    if (data.DireccionesNormalizadas && data.DireccionesNormalizadas.length > 0) {
+      data.DireccionesNormalizadas.forEach(d => {
+        if (d.Coordenadas) {
+          currentResults.push({ label: d.Direccion || q, lat: parseFloat(d.Coordenadas.y), lng: parseFloat(d.Coordenadas.x) });
+          items.push(d.Direccion || q);
+        }
+      });
+    }
+
+    if (items.length === 0) { suggestionsEl.classList.remove('active'); return; }
+
+    suggestionsEl.innerHTML = items.slice(0, 5).map((addr, i) =>
+      `<div class="suggestion-item" onclick="selectResult(${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <span>${addr}</span>
+      </div>`
+    ).join('');
+    suggestionsEl.classList.add('active');
+  } catch(err) {
+    suggestionsEl.classList.remove('active');
+  }
+}
+
+function selectResult(i) {
+  const r = currentResults[i];
+  if (!r) return;
+  searchInput.value = r.label;
+  suggestionsEl.classList.remove('active');
+  map.setView([r.lat, r.lng], 16, { animate: true });
+  showToast('Mostrando resultados cerca de ' + r.label.split(',')[0]);
+  openSheet();
+  buildNearbyList();
+}
+
+async function searchAndGo() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+  if (currentResults.length > 0) { selectResult(0); return; }
+  await fetchSuggestions(q);
+  if (currentResults.length > 0) selectResult(0);
+  else showToast('No se encontró la dirección en CABA');
+}
+
+document.getElementById('search-btn').addEventListener('click', searchAndGo);
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchAndGo();
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) suggestionsEl.classList.remove('active');
+});
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── CLOSE BANNER ─────────────────────────────────────────────────────────
+document.getElementById('close-banner').addEventListener('click', () => {
+  document.getElementById('api-banner').style.display = 'none';
+});
+
+// ── CLIMA CONDUCTOR ──────────────────────────────────────────────────────────
+const CLIMA_ICONS_C = {
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',
+  71:'❄️',73:'❄️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️',
+};
+const CLIMA_DESC_C = {
+  0:'Despejado',1:'Mayormente despejado',2:'Parcialmente nublado',3:'Nublado',
+  45:'Niebla',51:'Llovizna',53:'Llovizna',55:'Llovizna',
+  61:'Lluvia leve',63:'Lluvia',65:'Lluvia intensa',
+  80:'Chaparrón',81:'Chaparrón',82:'Chaparrón intenso',
+  95:'Tormenta',96:'Tormenta',99:'Tormenta',
+};
+const LLUVIA_CODES = [51,53,55,61,63,65,80,81,82,95,96,99];
+
+async function fetchClimaCondutor() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-34.6037&longitude=-58.3816&current=temperature_2m,relative_humidity_2m,weathercode,windspeed_10m&hourly=temperature_2m,weathercode,precipitation_probability&forecast_days=1&timezone=America/Argentina/Buenos_Aires');
+    const data = await res.json();
+    const c = data.current;
+    const code = c.weathercode;
+    const temp = Math.round(c.temperature_2m);
+    const hum = c.relative_humidity_2m;
+    const viento = Math.round(c.windspeed_10m);
+    const icon = CLIMA_ICONS_C[code] || '🌡️';
+    const desc = CLIMA_DESC_C[code] || 'Variable';
+    const esLluvia = LLUVIA_CODES.includes(code);
+
+    const strip = document.getElementById('clima-strip');
+    document.getElementById('cs-icon').textContent = icon;
+    document.getElementById('cs-temp').textContent = desc + ' · ' + temp + '°';
+    document.getElementById('cs-desc').textContent = `${hum}% hum · ${viento}km/h`;
+
+    // Forecast horario — próximas 6 horas
+    const nowHour = new Date().getHours();
+    const hours = data.hourly.time.map((t, i) => ({
+      hora: new Date(t).getHours(),
+      temp: Math.round(data.hourly.temperature_2m[i]),
+      code: data.hourly.weathercode[i],
+      prob: data.hourly.precipitation_probability[i],
+    })).filter(h => h.hora >= nowHour).slice(0, 6);
+
+    const proximaLluvia = hours.find(h => LLUVIA_CODES.includes(h.code) || h.prob >= 50);
+
+    // Forecast horario inline en el strip
+    const forecastHTML = hours.map(h => {
+      const ico = CLIMA_ICONS_C[h.code] || '🌡️';
+      const probColor = h.prob >= 70 ? '#93c5fd' : h.prob >= 40 ? '#bfdbfe' : 'rgba(255,255,255,0.2)';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:36px">
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.4)">${String(h.hora).padStart(2,'0')}hs</div>
+        <div style="font-size:13px">${ico}</div>
+        <div style="font-size:10px;font-weight:700;color:white">${h.temp}°</div>
+        ${h.prob > 0 ? `<div style="font-size:8px;font-weight:700;color:${probColor}">${h.prob}%</div>` : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('cs-right').innerHTML = `<div style="display:flex;gap:4px;align-items:center">${forecastHTML}</div>`;
+
+    if (esLluvia) strip.classList.add('lluvia');
+    strip.classList.add('visible');
+    document.getElementById('header').classList.add('with-clima');
+    document.getElementById('api-banner').style.top = '48px';
+
+    // Si hay lluvia próxima, mostrar toast
+    if (!esLluvia && proximaLluvia) {
+      setTimeout(() => showToast(`🌧️ Lluvia esperada a las ${String(proximaLluvia.hora).padStart(2,'0')}:00`), 2000);
+    }
+
+  } catch(e) { console.log('Clima no disponible'); }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+renderMarkers();
+buildNearbyList();
+setTimeout(() => openSheet(), 800);
+fetchClimaCondutor();
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("user") && urlParams.get("initial")) {
+  setLoggedIn(urlParams.get("user"), urlParams.get("initial"));
+}
+
+// ─── DEV LOGIN (quitar en producción) ──────────────────────────────────────
+const devBtn = document.createElement('button');
+devBtn.textContent = '🔑 Login como Milu';
+devBtn.style.cssText = 'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:2000;background:#1A1F2E;color:white;border:none;border-radius:100px;padding:10px 20px;font-family:DM Sans,sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.2);white-space:nowrap;';
+devBtn.onclick = () => { setLoggedIn('Milu', 'M'); devBtn.remove(); };
+document.getElementById('app').appendChild(devBtn);
+
+// ─── REGISTRO / LOGIN ──────────────────────────────────────────────────────
+let currentUser = null;
+
+// Mock favoritos, historial y vehículos
+const MOCK_FAVORITOS = [
+  { id:'p4', name:'Palermo Soho Parking', addr:'Thames 1650, Palermo', vehiculos:['auto','moto','bici-priv'], libre:57 },
+  { id:'p1', name:'Microcentro Norte', addr:'Florida 800, CABA', vehiculos:['auto','moto'], libre:34 },
+];
+const MOCK_HISTORIAL = [
+  { id:'h1', name:'Parking Puerto Madero', fecha:'18 mar 2026', vehiculo:'auto', precio:1300, pago:'mp', horas:2 },
+  { id:'h2', name:'BikeGarage Palermo', fecha:'12 mar 2026', vehiculo:'bici-priv', precio:360, pago:'local', horas:2 },
+  { id:'h3', name:'Moto Parking Congreso', fecha:'5 mar 2026', vehiculo:'moto', precio:640, pago:'local', horas:2 },
+];
+const MOCK_VEHICULOS = [
+  { tipo:'auto', label:'Auto', patente:'ABC 123', default:true },
+  { tipo:'moto', label:'Moto', patente:'XY 456', default:false },
+];
+const MOCK_RESERVA_ACTIVA = {
+  name:'Palermo Soho Parking', code:'847291', horas:2, vehiculo:'auto', pago:'mp', total:1400
+};
+
+function openRegister() {
+  if (currentUser) { switchTab('perfil'); return; }
+  window.location.href = "estacionapp-login.html";
+}
+
+function setLoggedIn(name, initial) {
+  currentUser = { name, initial };
+  // Mostrar tab bar, ocultar FAB
+  document.body.classList.add('has-tabbar');
+  document.getElementById('tab-bar').classList.add('visible');
+  document.getElementById('fab-register').style.display = 'none';
+  // Badge en reservas si hay activa
+  document.getElementById('tab-badge').style.display = 'block';
+  showToast('Bienvenido, ' + name + '!');
+  renderPanels();
+}
+
+// ── DETALLE RESERVA ──────────────────────────────────────────────────────────
+function abrirDetalleReserva() {
+  const ra = MOCK_RESERVA_ACTIVA;
+  if (!ra || !ra.name) return;
+
+  document.getElementById('dr-nombre').textContent = ra.name;
+  document.getElementById('dr-addr').textContent = ra.addr || 'CABA';
+  document.getElementById('dr-code').textContent = ra.code;
+
+  const VEH_LABEL = { auto:'Auto', moto:'Moto', 'bici-priv':'Bicicleta' };
+  const VEH_EMO   = { auto:'🚗', moto:'🏍️', 'bici-priv':'🚲' };
+  const TIPO_LABEL = { inmediata:'Llegada directa', 'mismo-dia':'Reserva hoy', anticipada:'Reserva anticipada' };
+  const PAGO_LABEL = { mp:'Mercado Pago (pagado)', local:'Pagar en el local' };
+
+  document.getElementById('dr-info').innerHTML = `
+    <div class="dr-info-row"><span class="dr-info-label">Vehículo</span><span class="dr-info-val">${VEH_EMO[ra.vehiculo] || '🚗'} ${VEH_LABEL[ra.vehiculo] || ra.vehiculo}</span></div>
+    <div class="dr-info-row"><span class="dr-info-label">Tipo</span><span class="dr-info-val">${TIPO_LABEL[ra.tipo] || 'Llegada directa'}</span></div>
+    <div class="dr-info-row"><span class="dr-info-label">Tiempo</span><span class="dr-info-val">${ra.horas}h estimadas</span></div>
+    <div class="dr-info-row"><span class="dr-info-label">Pago</span><span class="dr-info-val">${PAGO_LABEL[ra.pago] || ra.pago}</span></div>
+    <div class="dr-info-row"><span class="dr-info-label">Total</span><span class="dr-info-val" style="color:var(--brand-accent);font-family:'Space Grotesk',sans-serif;font-weight:700">$${ra.total}</span></div>
+    <div class="dr-info-row"><span class="dr-info-label">Estado</span><span class="dr-info-val" style="color:#059669">✓ Confirmada</span></div>`;
+
+  // Botón navegación
+  document.getElementById('dr-nav-btn').onclick = () => {
+    if (ra.lat && ra.lng) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${ra.lat},${ra.lng}&travelmode=driving`, '_blank');
+    } else {
+      window.open(`https://www.google.com/maps/search/${encodeURIComponent(ra.name + ' ' + (ra.addr || 'Buenos Aires'))}`, '_blank');
+    }
+  };
+
+  document.getElementById('panel-detalle-reserva').classList.add('active');
+}
+
+function cerrarDetalleReserva() {
+  document.getElementById('panel-detalle-reserva').classList.remove('active');
+}
+
+// ── CANCELACIÓN DE RESERVA (CONDUCTOR) ───────────────────────────────────────
+function abrirModalCancelar() {
+  const ra = MOCK_RESERVA_ACTIVA;
+  if (!ra) return;
+  document.getElementById('modal-reserva-info').innerHTML = `
+    <div class="modal-row"><span class="modal-row-label">Lugar</span><span class="modal-row-val">${ra.name}</span></div>
+    <div class="modal-row"><span class="modal-row-label">Código</span><span class="modal-row-val" style="font-family:'Space Grotesk',sans-serif;letter-spacing:2px">${ra.code}</span></div>
+    <div class="modal-row"><span class="modal-row-label">Vehículo</span><span class="modal-row-val">${VEH_EMO[ra.vehiculo]} ${VEHICULO_LABEL[ra.vehiculo]}</span></div>
+    <div class="modal-row"><span class="modal-row-label">Total abonado</span><span class="modal-row-val">$${ra.total}</span></div>`;
+  const refund = document.getElementById('modal-refund');
+  if (refund) refund.style.display = ra.pago === 'mp' ? 'flex' : 'none';
+  document.getElementById('modal-cancelar').classList.add('open');
+}
+
+function cerrarModalCancelar() {
+  document.getElementById('modal-cancelar').classList.remove('open');
+}
+
+function confirmarCancelacion() {
+  const ra = MOCK_RESERVA_ACTIVA;
+  cerrarModalCancelar();
+  // Simular cancelación
+  Object.keys(MOCK_RESERVA_ACTIVA).forEach(k => delete MOCK_RESERVA_ACTIVA[k]);
+  // Ocultar card reserva activa
+  const card = document.getElementById('rac-card');
+  if (card) card.outerHTML = '<div style="padding:20px;text-align:center;color:var(--text2);font-size:14px">Reserva cancelada. El reintegro se procesará en 24-72hs.</div>';
+  // Quitar badge del tab
+  document.getElementById('tab-badge').style.display = 'none';
+  showToast('Reserva cancelada correctamente');
+}
+
+// Cerrar modal tocando el fondo
+document.getElementById('modal-cancelar')?.addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalCancelar();
+});
+
+function cerrarSesion() {
+  currentUser = null;
+  document.body.classList.remove('has-tabbar');
+  document.getElementById('tab-bar').classList.remove('visible');
+  document.getElementById('fab-register').style.display = 'flex';
+  document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+  switchTab('mapa');
+  showToast('Sesión cerrada');
+}
+
+// ─── TAB BAR ────────────────────────────────────────────────────────────────
+let activeTab = 'mapa';
+
+function switchTab(tab) {
+  activeTab = tab;
+  // Cerrar detalle reserva si está abierto
+  document.getElementById('panel-detalle-reserva')?.classList.remove('active');
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab)?.classList.add('active');
+  document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+  if (tab !== 'mapa') {
+    document.getElementById('panel-' + tab)?.classList.add('active');
+  }
+  // Siempre mantener el tab bar visible si hay usuario logueado
+  if (currentUser) {
+    document.getElementById('tab-bar').classList.add('visible');
+    document.body.classList.add('has-tabbar');
+  }
+}
+
+// ─── RENDER PANELS ───────────────────────────────────────────────────────────
+function renderPanels() {
+  renderPerfilHero();
+  renderFavoritos();
+  renderReservas();
+  renderVehiculos();
+}
+
+function renderPerfilHero() {
+  if (!currentUser) return;
+  document.getElementById('profile-hero').innerHTML = `
+    <div class="profile-av">${currentUser.initial}</div>
+    <div>
+      <div class="profile-name">${currentUser.name}</div>
+      <div class="profile-email">Conductor · EstacionApp</div>
+    </div>`;
+}
+
+function renderFavoritos() {
+  const VEH = { auto:'#E8E9F0', moto:'#FFF0EA', 'bici-priv':'#F0EBF8' };
+  const EMO = { auto:'🚗', moto:'🏍️', 'bici-priv':'🚲' };
+  document.getElementById('fav-list').innerHTML = MOCK_FAVORITOS.length
+    ? MOCK_FAVORITOS.map(f => `
+        <div class="fav-card" onclick="irAFavorito('${f.id}')">
+          <div class="fav-ico" style="background:${VEH[f.vehiculos[0]]}">${EMO[f.vehiculos[0]]}</div>
+          <div style="flex:1">
+            <div class="fav-name">${f.name}</div>
+            <div class="fav-sub">${f.addr} · ${f.libre} libres</div>
+          </div>
+          <span class="fav-star">★</span>
+        </div>`).join('')
+    : '<div style="padding:40px 20px;text-align:center;color:var(--text2);font-size:14px">Todavía no tenés favoritos.<br>Tocá ★ en cualquier lugar para guardarlo.</div>';
+}
+
+function irAFavorito(id) {
+  const place = MOCK_DATA_ALL[id];
+  if (place) {
+    map.setView([place.lat, place.lng], 16, {animate:true});
+    // Cerrar panels sin cambiar tab activo en la barra
+    document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-mapa').classList.add('active');
+    openDetail(place, 'parking');
+  }
+}
+
+function renderReservas() {
+  const VEH_EMO = { auto:'🚗', moto:'🏍️', 'bici-priv':'🚲' };
+  const ra = MOCK_RESERVA_ACTIVA;
+
+  // Activa
+  document.getElementById('reservas-activa').innerHTML = ra && ra.name ? `
+    <div class="reserva-activa-card" id="rac-card">
+      <div class="rac-label">🔴 Reserva activa</div>
+      <div class="rac-name">${ra.name}</div>
+      <div class="rac-row">
+        <div class="rac-code">${ra.code}</div>
+        <div class="rac-timer">${VEH_EMO[ra.vehiculo]} · ${ra.horas}h · $${ra.total}</div>
+      </div>
+      <button class="rac-btn" onclick="abrirDetalleReserva()" style="margin-top:12px">Ver detalles →</button>
+    </div>`
+  : '<div style="padding:20px;text-align:center;color:var(--text2);font-size:14px">No tenés reservas activas.</div>';
+
+  // Historial
+  document.getElementById('reservas-historial').innerHTML = MOCK_HISTORIAL.map(h => `
+    <div class="hist-card">
+      <div class="hist-top">
+        <div class="hist-name">${h.name}</div>
+        <div class="hist-precio">$${h.precio}</div>
+      </div>
+      <div class="hist-sub">${VEH_EMO[h.vehiculo]} · ${h.fecha} · ${h.horas}h</div>
+      <span class="hist-badge ${h.pago==='mp'?'hist-ok':'hist-local'}">${h.pago==='mp'?'Pagado en app':'Pagado en local'}</span>
+    </div>`).join('');
+}
+
+function renderVehiculos() {
+  const VEH = { auto:'#E8E9F0', moto:'#FFF0EA', 'bici-priv':'#F0EBF8' };
+  const EMO = { auto:'🚗', moto:'🏍️', 'bici-priv':'🚲' };
+  document.getElementById('veh-list').innerHTML = MOCK_VEHICULOS.map(v => `
+    <div class="veh-card">
+      <div class="veh-ico" style="background:${VEH[v.tipo]}">${EMO[v.tipo]}</div>
+      <div style="flex:1">
+        <div class="veh-name">${v.label} · ${v.patente}</div>
+        <div class="veh-sub">${v.default ? 'Vehículo principal' : 'Secundario'}</div>
+      </div>
+      ${v.default ? '<span class="veh-default">Principal</span>' : ''}
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

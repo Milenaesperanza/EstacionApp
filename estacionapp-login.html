@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EstacionApp · Ingresá</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand: #1A1F2E;
+  --accent: #00D68F;
+  --surface: #FFFFFF;
+  --bg: #F4F5F7;
+  --text: #1A1F2E;
+  --text2: #6B7280;
+  --border: rgba(26,31,46,0.1);
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+html, body {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--surface);
+}
+
+/* ── HEADER ── */
+.login-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 20px 0;
+  gap: 12px;
+}
+.back-link {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; color: var(--text);
+  font-size: 18px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.back-link:hover { background: #e8e9ec; }
+
+.header-logo {
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none; color: var(--text);
+}
+.header-logo svg { width: 28px; height: 28px; }
+.header-logo span {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700; font-size: 18px; letter-spacing: -0.3px;
+}
+.header-logo .g { color: var(--accent); }
+
+/* ── HERO COPY ── */
+.login-hero {
+  padding: 36px 24px 28px;
+}
+.login-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+.login-title .g { color: var(--accent); }
+.login-sub {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  margin: 0 24px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ── FORM ── */
+.form-wrap {
+  padding: 0 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+.field input {
+  height: 52px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  padding: 0 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.field input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.field input::placeholder { color: rgba(107,114,128,0.6); }
+
+.forgot {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: -6px;
+}
+
+/* ── BTN PRINCIPAL ── */
+.btn-submit {
+  width: 100%;
+  height: 54px;
+  border-radius: 100px;
+  border: none;
+  background: var(--brand);
+  color: var(--surface);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  margin-top: 4px;
+}
+.btn-submit:hover { background: #2d3448; }
+.btn-submit:active { transform: scale(0.98); }
+
+/* ── DIVIDER ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+.divider-txt { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+/* ── GOOGLE BTN ── */
+.btn-google {
+  width: 100%;
+  height: 54px;
+  border-radius: 100px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: background 0.15s, transform 0.15s;
+}
+.btn-google:hover { background: var(--bg); }
+.btn-google:active { transform: scale(0.98); }
+.btn-google svg { width: 20px; height: 20px; }
+
+/* ── BENEFICIOS ── */
+.benefits {
+  margin: 20px 24px 0;
+  background: rgba(0,214,143,0.07);
+  border: 1px solid rgba(0,214,143,0.2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.benefit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.benefit-ico {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* ── FOOTER ── */
+.login-footer {
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.login-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: var(--brand);
+  color: white;
+  font-size: 13px; font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+}
+#toast.show { opacity: 1; }
+
+/* Animación entrada */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.login-hero, .tabs, .form-wrap, .benefits { animation: fadeUp 0.4s ease both; }
+.tabs { animation-delay: 0.05s; }
+.form-wrap { animation-delay: 0.1s; }
+.benefits { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div class="login-header">
+    <a href="estacionapp.html" class="back-link">←</a>
+    <a href="estacionapp-landing.html" class="header-logo">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 1.5C8.96 1.5 6 4.3 6 7.9c0 4.5 6 13.1 6 13.1s6-8.6 6-13.1C18 4.3 15.04 1.5 12 1.5z" fill="#00D68F"/>
+        <circle cx="12" cy="7.8" r="3.6" fill="#1A1F2E"/>
+        <text x="10.1" y="10.3" font-family="Georgia,serif" font-weight="900" font-size="5.8" fill="white">P</text>
+      </svg>
+      <span>Estacion<span class="g">App</span></span>
+    </a>
+  </div>
+
+  <!-- Hero -->
+  <div class="login-hero">
+    <div class="login-title">Guardá tus<br>lugares <span class="g">favoritos.</span></div>
+    <p class="login-sub">Creá tu cuenta gratis y accedé a tus estacionamientos habituales en un toque.</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tab-register" onclick="switchTab('register')">Crear cuenta</button>
+    <button class="tab" id="tab-login" onclick="switchTab('login')">Iniciar sesión</button>
+  </div>
+
+  <!-- Form -->
+  <div class="form-wrap" id="form-wrap">
+
+    <div class="field" id="field-name">
+      <label>Nombre</label>
+      <input type="text" id="input-name" placeholder="Tu nombre">
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="input-email" placeholder="tu@email.com">
+    </div>
+
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="input-pass" placeholder="Mínimo 8 caracteres">
+    </div>
+
+    <a href="#" class="forgot" id="forgot-link" style="display:none">¿Olvidaste tu contraseña?</a>
+
+    <button class="btn-submit" id="btn-submit" onclick="handleSubmit()">Crear cuenta gratis</button>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-txt">o continuá con</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <button class="btn-google" onclick="handleGoogle()">
+      <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continuar con Google
+    </button>
+
+  </div>
+
+  <!-- Beneficios (solo en registro) -->
+  <div class="benefits" id="benefits">
+    <div class="benefit-row">
+      <div class="benefit-ico">⭐</div>
+      <span>Guardá estacionamientos y EcoBici favoritos</span>
+    </div>
+    <div class="benefit-row">
+      <div class="benefit-ico">🔔</div>
+      <span>Alertas cuando quedan pocos espacios</span>
+    </div>
+    <div class="benefit-row">
+      <div class="benefit-ico">⚡</div>
+      <span>Siempre gratis, sin publicidad</span>
+    </div>
+  </div>
+
+  <div class="login-footer">
+    Al continuar aceptás los <a href="#">Términos de uso</a> y la <a href="#">Política de privacidad</a>.
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+let currentTab = 'register';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('field-name').style.display = tab === 'register' ? 'flex' : 'none';
+  document.getElementById('forgot-link').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('btn-submit').textContent = tab === 'register' ? 'Crear cuenta gratis' : 'Iniciar sesión';
+  document.getElementById('benefits').style.display = tab === 'register' ? 'flex' : 'none';
+  document.getElementById('input-pass').placeholder = tab === 'register' ? 'Mínimo 8 caracteres' : 'Tu contraseña';
+}
+
+function handleSubmit() {
+  const email = document.getElementById('input-email').value.trim();
+  const pass = document.getElementById('input-pass').value.trim();
+  const name = currentTab === 'register' ? document.getElementById('input-name').value.trim() : '';
+
+  if (currentTab === 'register' && !name) { showToast('Ingresá tu nombre'); return; }
+  if (!email || !email.includes('@')) { showToast('Ingresá un email válido'); return; }
+  if (pass.length < 6) { showToast('La contraseña es muy corta'); return; }
+
+  const displayName = currentTab === 'register' ? name : email.split('@')[0];
+  loginSuccess(displayName);
+}
+
+function handleGoogle() {
+  showToast('Conectando con Google...');
+  setTimeout(() => loginSuccess('Usuario Google'), 1200);
+}
+
+function loginSuccess(name) {
+  const initial = name.charAt(0).toUpperCase();
+  showToast('Bienvenido, ' + name + '!');
+  setTimeout(() => {
+    window.location.href = 'estacionapp.html?user=' + encodeURIComponent(name) + '&initial=' + initial;
+  }, 1000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Recibir usuario si ya estaba logueado
+const params = new URLSearchParams(window.location.search);
+if (params.get('user')) switchTab('login');
+</script>
+</body>
+</html>

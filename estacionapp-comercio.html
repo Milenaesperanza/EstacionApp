@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EstacionApp · Comercio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand: #1A1F2E;
+  --accent: #2B7FFF;
+  --accent-light: rgba(43,127,255,0.1);
+  --accent-dark: #1a5fd4;
+  --surface: #FFFFFF;
+  --bg: #F4F5F7;
+  --text: #1A1F2E;
+  --text2: #6B7280;
+  --border: rgba(26,31,46,0.1);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+  --green: #00D68F;
+  --orange: #FF6B2B;
+  --red: #EF4444;
+  --yellow: #F5A623;
+}
+
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+#app {
+  display: flex; flex-direction: column;
+  height: 100vh; max-width: 430px;
+  margin: 0 auto; background: var(--surface);
+  position: relative; overflow: hidden;
+}
+
+/* ── LOGIN / REGISTRO ── */
+#screen-auth {
+  display: flex; flex-direction: column;
+  height: 100%; overflow-y: auto;
+}
+
+.auth-hero {
+  background: var(--brand);
+  padding: 60px 28px 40px;
+  display: flex; flex-direction: column;
+  align-items: flex-start; gap: 16px;
+}
+.auth-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.auth-logo svg { width: 36px; height: 36px; }
+.auth-logo-text { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: white; }
+.auth-logo-text span { color: var(--accent); }
+.auth-badge {
+  background: var(--accent-light); border: 1px solid rgba(43,127,255,0.3);
+  border-radius: 100px; padding: 5px 14px;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.3px;
+}
+.auth-title { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; color: white; line-height: 1.15; }
+.auth-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+.auth-body { padding: 28px 24px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+.auth-tabs { display: flex; background: var(--bg); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 4px; }
+.auth-tab { flex: 1; padding: 10px; border-radius: 9px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--text2); cursor: pointer; transition: all 0.2s; }
+.auth-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--text2); }
+.field input, .field select {
+  height: 52px; border-radius: var(--radius);
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 16px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--text); outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.field input:focus, .field select:focus { border-color: var(--accent); background: var(--surface); }
+.field input::placeholder { color: rgba(107,114,128,0.6); }
+
+.btn-accent {
+  width: 100%; height: 54px; border-radius: 100px;
+  border: none; background: var(--accent); color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s, background 0.15s;
+}
+.btn-accent:hover { background: var(--accent-dark); }
+.btn-accent:active { transform: scale(0.98); }
+.btn-ghost {
+  width: 100%; height: 48px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* ── MAIN APP (post login) ── */
+#screen-app { display: none; flex-direction: column; height: 100%; }
+#screen-app.active { display: flex; }
+
+/* TOP BAR */
+.topbar {
+  background: var(--brand); padding: 20px 20px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.topbar-left {}
+.topbar-greeting { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 500; }
+.topbar-name { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: white; letter-spacing: -0.3px; margin-top: 2px; }
+.topbar-av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--accent); border: 2px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 800;
+  font-size: 16px; color: white; cursor: pointer;
+}
+
+/* TAB BAR */
+.tab-bar {
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; padding: 10px 0;
+  border: none; background: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 10px;
+  font-weight: 600; color: var(--text2); transition: color 0.15s;
+  position: relative;
+}
+.tab-btn.active { color: var(--accent); }
+.tab-btn svg { width: 22px; height: 22px; }
+.tab-dot { position: absolute; top: 6px; right: calc(50% - 16px); width: 8px; height: 8px; border-radius: 50%; background: var(--red); border: 2px solid var(--surface); }
+
+/* CONTENT AREA */
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.panel { display: none; padding: 20px; }
+.panel.active { display: block; }
+
+/* ── DASHBOARD ── */
+.dash-date { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 16px; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--bg); border-radius: var(--radius-sm); padding: 14px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.stat-card.accent { background: var(--accent); }
+.stat-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.3px; }
+.stat-card.accent .stat-label { color: rgba(255,255,255,0.6); }
+.stat-val { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -1px; color: var(--text); }
+.stat-card.accent .stat-val { color: white; }
+.stat-sub { font-size: 11px; color: var(--text2); }
+.stat-card.accent .stat-sub { color: rgba(255,255,255,0.5); }
+
+.section-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: -0.3px; margin-bottom: 12px; }
+
+/* Ocupación bar */
+.ocupacion-wrap { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 20px; }
+.ocup-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ocup-label { font-size: 13px; font-weight: 600; }
+.ocup-pct { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: var(--accent); }
+.ocup-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.ocup-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.5s ease; }
+.ocup-detail { display: flex; gap: 12px; margin-top: 8px; }
+.ocup-item { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+.ocup-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* Reserva card */
+.reserva-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: box-shadow 0.15s;
+}
+.reserva-card:hover { box-shadow: var(--shadow); }
+.reserva-card.pendiente { border-left: 3px solid var(--yellow); }
+.reserva-card.confirmada { border-left: 3px solid var(--accent); }
+.reserva-card.activa { border-left: 3px solid var(--green); }
+.rc-ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.rc-body { flex: 1; min-width: 0; }
+.rc-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.rc-meta { text-align: right; flex-shrink: 0; }
+.rc-code { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 1px; color: var(--accent); }
+.rc-hora { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.rc-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-top: 4px; }
+.badge-pendiente { background: #FEF9E7; color: #D97706; }
+.badge-confirmada { background: var(--accent-light); color: var(--accent); }
+.badge-activa { background: rgba(0,214,143,0.1); color: #059669; }
+
+/* ── ESPACIOS ── */
+.espacio-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+}
+.esp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.esp-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; }
+.esp-toggle { display: flex; align-items: center; gap: 8px; }
+.toggle-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.toggle {
+  width: 44px; height: 24px; border-radius: 100px;
+  background: var(--border); border: none; cursor: pointer;
+  position: relative; transition: background 0.2s;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; top: 3px; left: 3px;
+  transition: left 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.toggle.on::after { left: 23px; }
+
+.esp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.esp-stat { background: var(--bg); border-radius: 8px; padding: 10px; }
+.esp-stat-label { font-size: 10px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.esp-stat-val { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; margin-top: 2px; }
+.esp-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.esp-tag { display: flex; align-items: center; gap: 4px; background: var(--bg); border-radius: 100px; padding: 5px 12px; font-size: 12px; font-weight: 600; }
+.esp-precio { font-size: 11px; color: var(--text2); margin-left: 4px; }
+.btn-edit { background: none; border: 1.5px solid var(--border); border-radius: 100px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text); margin-top: 12px; width: 100%; transition: border-color 0.15s; }
+.btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+.fab-add {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); border: none;
+  color: white; font-size: 26px; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(43,127,255,0.4);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+  z-index: 100;
+}
+.fab-add:active { transform: scale(0.93); }
+
+/* ── EDICIÓN INLINE ESPACIO ── */
+.esp-edit-form {
+  display: none; flex-direction: column; gap: 14px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+  margin-top: 4px; animation: fadeUp 0.2s ease both;
+}
+.esp-edit-form.open { display: flex; }
+.edit-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text2); }
+.edit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.edit-label { font-size: 14px; font-weight: 600; flex: 1; }
+.edit-input {
+  height: 40px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 12px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 700; color: var(--text);
+  outline: none; width: 100px; text-align: right;
+  transition: border-color 0.15s;
+}
+.edit-input:focus { border-color: var(--accent); background: var(--surface); }
+.edit-select {
+  height: 40px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  outline: none; cursor: pointer; transition: border-color 0.15s;
+}
+.edit-select:focus { border-color: var(--accent); }
+.check-group { display: flex; flex-direction: column; gap: 8px; }
+.check-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--bg); cursor: pointer;
+  transition: background 0.15s;
+}
+.check-item:hover { background: #ecedf0; }
+.check-item input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.check-item-label { font-size: 14px; font-weight: 600; }
+.edit-actions { display: flex; gap: 8px; }
+.btn-save {
+  flex: 1; height: 44px; border-radius: 100px;
+  background: var(--accent); border: none; color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s;
+}
+.btn-save:active { transform: scale(0.97); }
+.btn-cancel {
+  height: 44px; padding: 0 20px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text2); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-edit-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: none; border: 1.5px solid var(--border);
+  border-radius: 100px; padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; color: var(--text); margin-top: 12px; width: 100%;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-edit-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.btn-edit-toggle.open { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ── PANEL CONFIGURACIÓN COMERCIO ── */
+.config-panel {
+  position: absolute; inset: 0; background: var(--surface);
+  z-index: 500; display: none; flex-direction: column;
+  overflow-y: auto; padding-bottom: 40px;
+}
+.config-panel.active { display: flex; }
+.config-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 10;
+}
+.config-back {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; color: var(--text2);
+  transition: background 0.15s; flex-shrink: 0;
+}
+.config-back:hover { background: #e8e9ec; }
+.config-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
+
+.config-section { padding: 20px 20px 0; }
+.config-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 12px; }
+
+/* Días selector */
+.dias-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 4px; }
+.dia-btn {
+  aspect-ratio: 1; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  color: var(--text2); transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.dia-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* Horario */
+.horario-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.horario-row:last-child { border: none; }
+.horario-label { font-size: 14px; font-weight: 600; flex: 1; }
+.horario-input {
+  height: 40px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; color: var(--text);
+  outline: none; transition: border-color 0.15s; width: 110px;
+  text-align: center;
+}
+.horario-input:focus { border-color: var(--accent); background: var(--surface); }
+
+/* Feriados */
+.feriado-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px; background: var(--bg); border-radius: 10px;
+  margin-bottom: 8px;
+}
+.feriado-fecha { font-size: 13px; font-weight: 700; flex: 1; }
+.feriado-desc { font-size: 12px; color: var(--text2); }
+.feriado-del { background: none; border: none; color: var(--red); font-size: 18px; cursor: pointer; padding: 0 4px; }
+.add-feriado-wrap { display: flex; gap: 8px; margin-top: 8px; }
+.add-feriado-input {
+  flex: 1; height: 44px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 12px; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+.add-feriado-input:focus { border-color: var(--accent); background: var(--surface); }
+.add-feriado-btn {
+  height: 44px; padding: 0 16px; border-radius: 10px;
+  background: var(--accent); border: none; color: white;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.config-save-bar {
+  position: sticky; bottom: 0; background: var(--surface);
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  margin-top: 24px;
+}
+.btn-config-save {
+  width: 100%; height: 52px; border-radius: 100px;
+  background: var(--accent); border: none; color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s;
+}
+.btn-config-save:active { transform: scale(0.98); }
+
+/* ── MODO ESPACIOS ── */
+.esp-mode-btn {
+  flex: 1; height: 40px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; color: var(--text2); transition: all 0.15s;
+}
+.esp-mode-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* VISTA OPERATIVA */
+.op-card {
+  background: var(--bg); border-radius: 20px;
+  padding: 20px; margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.op-header { display: flex; align-items: center; justify-content: space-between; }
+.op-title { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
+.op-status {
+  font-size: 12px; font-weight: 700; padding: 4px 12px;
+  border-radius: 100px;
+}
+.op-status.ok { background: rgba(0,214,143,0.12); color: #059669; }
+.op-status.warning { background: rgba(245,166,35,0.12); color: #D97706; }
+.op-status.full { background: rgba(239,68,68,0.1); color: var(--red); }
+
+.op-counter {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.op-btn {
+  width: 64px; height: 64px; border-radius: 18px;
+  border: none; cursor: pointer;
+  font-size: 32px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s, box-shadow 0.1s;
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.op-btn:active { transform: scale(0.9); }
+.op-btn-minus { background: rgba(239,68,68,0.1); color: var(--red); }
+.op-btn-minus:hover { background: rgba(239,68,68,0.18); }
+.op-btn-plus { background: rgba(43,127,255,0.12); color: var(--accent); }
+.op-btn-plus:hover { background: rgba(43,127,255,0.2); }
+.op-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.op-btn:disabled:active { transform: none; }
+
+.op-nums { text-align: center; flex: 1; }
+.op-num-big {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 800;
+  font-size: 56px; letter-spacing: -3px; line-height: 1;
+  color: var(--brand);
+  transition: transform 0.15s;
+}
+.op-num-big.bump { transform: scale(1.18); }
+.op-num-total { font-size: 16px; color: var(--text2); font-weight: 600; margin-top: 2px; }
+
+.op-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+.op-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease, background 0.4s; }
+
+.op-footer { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); font-weight: 600; }
+
+/* ── QR SCANNER ── */
+.qr-panel { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 20px; }
+.qr-viewfinder {
+  width: 260px; height: 260px;
+  border-radius: 24px; background: var(--brand);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.qr-corners::before, .qr-corners::after {
+  content: ''; position: absolute;
+  width: 40px; height: 40px;
+  border-color: var(--accent); border-style: solid;
+}
+.qr-corner-tl { position: absolute; top: 16px; left: 16px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.qr-corner-tr { position: absolute; top: 16px; right: 16px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.qr-corner-bl { position: absolute; bottom: 16px; left: 16px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.qr-corner-br { position: absolute; bottom: 16px; right: 16px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+.qr-scan-line {
+  position: absolute; left: 20px; right: 20px; height: 2px;
+  background: var(--accent); box-shadow: 0 0 8px var(--accent);
+  animation: scanLine 2s ease-in-out infinite;
+}
+@keyframes scanLine { 0%,100% { top: 20px; } 50% { top: calc(100% - 20px); } }
+.qr-icon { font-size: 48px; opacity: 0.15; }
+
+.qr-hint { font-size: 14px; color: var(--text2); text-align: center; line-height: 1.5; }
+.qr-manual { width: 100%; }
+.qr-manual-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-align: center; }
+.qr-input-wrap { display: flex; gap: 8px; }
+.qr-input {
+  flex: 1; height: 52px; border-radius: var(--radius);
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 16px; font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px; font-weight: 800; letter-spacing: 3px;
+  color: var(--text); outline: none; text-align: center;
+  transition: border-color 0.15s;
+}
+.qr-input:focus { border-color: var(--accent); background: var(--surface); }
+.qr-btn {
+  height: 52px; width: 52px; border-radius: var(--radius);
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+}
+.qr-btn:active { transform: scale(0.93); }
+.qr-btn svg { width: 22px; height: 22px; stroke: white; }
+
+/* Resultado validación */
+.validacion-result {
+  width: 100%; border-radius: var(--radius); padding: 20px;
+  display: none; flex-direction: column; gap: 12px;
+}
+.validacion-result.ok { background: rgba(0,214,143,0.08); border: 1.5px solid rgba(0,214,143,0.3); display: flex; }
+.validacion-result.error { background: rgba(239,68,68,0.08); border: 1.5px solid rgba(239,68,68,0.3); display: flex; }
+.vr-header { display: flex; align-items: center; gap: 10px; }
+.vr-ico { font-size: 28px; }
+.vr-title { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; }
+.vr-row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+.vr-row:last-child { border: none; }
+.vr-label { color: var(--text2); }
+.vr-val { font-weight: 600; }
+.btn-confirmar-entrada {
+  width: 100%; height: 52px; border-radius: 100px;
+  background: var(--green); border: none; color: var(--brand);
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s;
+}
+.btn-confirmar-entrada:active { transform: scale(0.98); }
+
+/* ── HISTORIAL / STATS ── */
+.period-selector { display: flex; gap: 6px; margin-bottom: 16px; }
+.period-btn { padding: 6px 14px; border-radius: 100px; border: 1.5px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+.period-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+.chart-wrap { background: var(--bg); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; }
+.chart-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.3px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent); opacity: 0.7; transition: opacity 0.15s; min-height: 4px; }
+.bar:hover { opacity: 1; }
+.bar-label { font-size: 9px; color: var(--text2); font-weight: 600; }
+
+.ingreso-total { background: var(--brand); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; color: white; }
+.it-label { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+.it-val { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 36px; letter-spacing: -1px; color: white; }
+.it-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+.it-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 14px; }
+.it-item { background: rgba(255,255,255,0.06); border-radius: 8px; padding: 10px; }
+.it-item-val { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: var(--accent); }
+.it-item-label { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+/* ── VISTA CALENDARIO RESERVAS ── */
+.rv-view-btn {
+  padding: 5px 10px; border-radius: 7px; border: none;
+  background: transparent; font-size: 12px; font-weight: 700;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.rv-view-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px; margin-bottom: 16px;
+}
+.cal-day-label { text-align: center; font-size: 10px; font-weight: 700; color: var(--text2); padding: 4px 0; }
+.cal-day {
+  aspect-ratio: 1; border-radius: 10px; border: 1.5px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer; transition: all 0.15s; background: var(--surface);
+  position: relative;
+}
+.cal-day:hover { border-color: var(--accent); }
+.cal-day.today { border-color: var(--accent); background: var(--accent-light); }
+.cal-day.has-reservas { background: var(--bg); }
+.cal-day.selected { background: var(--accent); border-color: var(--accent); }
+.cal-day-num { font-size: 13px; font-weight: 700; color: var(--text); }
+.cal-day.selected .cal-day-num { color: white; }
+.cal-day.today .cal-day-num { color: var(--accent); }
+.cal-day.selected.today .cal-day-num { color: white; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.cal-day.selected .cal-dot { background: white; }
+.cal-day.empty { border-color: transparent; background: transparent; cursor: default; }
+.cal-month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-month-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; }
+.cal-nav-btn { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.cal-nav-btn:hover { border-color: var(--accent); }
+.cal-selected-reservas { margin-top: 4px; }
+.cal-selected-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+
+/* ── FILTROS PAGO ── */
+.pago-filter-btn {
+  padding: 6px 14px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  color: var(--text2); transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.pago-filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* ── CLIMA ── */
+.clima-bar {
+  background: var(--brand);
+  padding: 10px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.clima-left { display: flex; align-items: center; gap: 8px; }
+.clima-icon { font-size: 20px; }
+.clima-temp { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: white; }
+.clima-desc { font-size: 12px; color: rgba(255,255,255,0.5); }
+.clima-right { text-align: right; }
+.clima-city { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600; }
+.clima-extra { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+.clima-alert {
+  background: rgba(245,166,35,0.15); border-bottom: 1px solid rgba(245,166,35,0.25);
+  padding: 7px 20px; display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: #D97706;
+  flex-shrink: 0; display: none;
+}
+
+/* ── ACCIONES RESERVA COMERCIO ── */
+.rc-actions { display: flex; gap: 6px; margin-top: 10px; }
+.rc-action-btn {
+  flex: 1; height: 36px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; color: var(--text); transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.rc-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+.rc-action-btn.danger:hover { border-color: #EF4444; color: #EF4444; }
+.rc-action-btn:active { transform: scale(0.96); }
+
+/* ── MODAL CANCELACIÓN COMERCIO ── */
+#modal-com-cancelar {
+  position: absolute; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.5); display: none;
+  align-items: flex-end; backdrop-filter: blur(2px);
+}
+#modal-com-cancelar.open { display: flex; }
+.com-modal-sheet {
+  background: var(--surface); width: 100%;
+  border-radius: 24px 24px 0 0; padding: 24px 20px 40px;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.com-modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.com-modal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 8px; }
+.com-modal-sub { font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+.com-modal-card { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; }
+.com-modal-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.com-modal-row:last-child { border: none; }
+.com-modal-row-label { color: var(--text2); }
+.com-modal-row-val { font-weight: 600; }
+.motivo-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+.motivo-opts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.motivo-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 600;
+}
+.motivo-opt:hover { border-color: var(--accent); }
+.motivo-opt.selected { border-color: #EF4444; background: rgba(239,68,68,0.05); color: #EF4444; }
+.motivo-opt input { accent-color: #EF4444; width: 16px; height: 16px; }
+.btn-com-cancelar {
+  width: 100%; height: 52px; border-radius: 100px;
+  background: #EF4444; border: none; color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; margin-bottom: 10px; transition: transform 0.15s;
+}
+.btn-com-cancelar:active { transform: scale(0.98); }
+.btn-com-back {
+  width: 100%; height: 48px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--brand); color: white; font-size: 13px; font-weight: 500;
+  padding: 10px 20px; border-radius: 100px; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999;
+}
+#toast.show { opacity: 1; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.panel.active { animation: fadeUp 0.3s ease both; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── AUTH ── -->
+<div id="screen-auth">
+  <div class="auth-hero">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 1.5C8.96 1.5 6 4.3 6 7.9c0 4.5 6 13.1 6 13.1s6-8.6 6-13.1C18 4.3 15.04 1.5 12 1.5z" fill="#2B7FFF"/>
+        <circle cx="12" cy="7.8" r="3.6" fill="#1A1F2E"/>
+        <text x="10.1" y="10.3" font-family="Georgia,serif" font-weight="900" font-size="5.8" fill="white">P</text>
+      </svg>
+      <div class="auth-logo-text">Estacion<span>App</span> <span style="font-size:14px;font-weight:500;color:rgba(255,255,255,0.4)">Comercio</span></div>
+    </div>
+    <span class="auth-badge">Panel de gestión</span>
+    <div class="auth-title">Gestioná tu<br>estacionamiento.</div>
+    <div class="auth-sub">Reservas, espacios y pagos en un solo lugar.</div>
+  </div>
+
+  <div class="auth-body">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="atab-login" onclick="switchAuthTab('login')">Ingresar</button>
+      <button class="auth-tab" id="atab-register" onclick="switchAuthTab('register')">Registrar comercio</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="tu@comercio.com"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="l-pass" placeholder="Tu contraseña"></div>
+        <button class="btn-accent" onclick="doLogin()">Ingresar</button>
+        <button class="btn-ghost" onclick="devLogin()">🔑 Demo rápido</button>
+      </div>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="auth-register" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="field"><label>Nombre del comercio</label><input type="text" id="r-nombre" placeholder="Ej: Parking Flores"></div>
+        <div class="field"><label>Dirección</label><input type="text" id="r-dir" placeholder="Calle y número, CABA"></div>
+        <div class="field"><label>Tipo de comercio</label>
+          <select id="r-tipo">
+            <option value="">Elegir...</option>
+            <option>Estacionamiento cubierto</option>
+            <option>Estacionamiento descubierto</option>
+            <option>Cochera</option>
+            <option>Garage con servicios</option>
+          </select>
+        </div>
+        <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="contacto@comercio.com"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="r-pass" placeholder="Mínimo 8 caracteres"></div>
+        <div class="field"><label>Teléfono</label><input type="tel" id="r-tel" placeholder="+54 11 xxxx-xxxx"></div>
+        <button class="btn-accent" onclick="doRegister()">Registrar mi comercio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="screen-app">
+
+  <!-- Clima -->
+  <div class="clima-bar" id="clima-bar">
+    <div class="clima-left">
+      <div class="clima-icon" id="clima-icon">⛅</div>
+      <div>
+        <div class="clima-temp" id="clima-temp">--°</div>
+        <div class="clima-desc" id="clima-desc">Cargando...</div>
+      </div>
+    </div>
+    <div class="clima-right">
+      <div class="clima-city">Buenos Aires, CABA</div>
+      <div class="clima-extra" id="clima-extra">Humedad --% · Viento --km/h</div>
+    </div>
+  </div>
+  <div class="clima-alert" id="clima-alert">
+    🌧️ <span id="clima-alert-msg"></span>
+  </div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-greeting">Buenos días 👋</div>
+      <div class="topbar-name" id="comercio-name">Mi Estacionamiento</div>
+    </div>
+    <div class="topbar-av" id="comercio-av" onclick="openConfig()">P</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="dash-date" id="dash-date"></div>
+
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <div class="stat-label">Reservas hoy</div>
+          <div class="stat-val">12</div>
+          <div class="stat-sub">+3 vs ayer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ingresos hoy</div>
+          <div class="stat-val" style="font-size:22px">$18.400</div>
+          <div class="stat-sub">+$2.100 vs ayer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Autos</div>
+          <div class="stat-val">8</div>
+          <div class="stat-sub">de 20 espacios</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Motos/Bicis</div>
+          <div class="stat-val">6</div>
+          <div class="stat-sub">de 15 espacios</div>
+        </div>
+      </div>
+
+      <div class="ocupacion-wrap">
+        <div class="ocup-row">
+          <div class="ocup-label">Ocupación actual</div>
+          <div class="ocup-pct">68%</div>
+        </div>
+        <div class="ocup-bar"><div class="ocup-fill" style="width:68%"></div></div>
+        <div class="ocup-detail">
+          <div class="ocup-item"><div class="ocup-dot" style="background:#2B7FFF"></div>14 ocupados</div>
+          <div class="ocup-item"><div class="ocup-dot" style="background:var(--border)"></div>7 libres</div>
+          <div class="ocup-item"><div class="ocup-dot" style="background:var(--yellow)"></div>3 reservados</div>
+        </div>
+      </div>
+
+      <div class="section-title">Próximas reservas</div>
+      <div id="dash-reservas"></div>
+    </div>
+
+    <!-- RESERVAS -->
+    <div class="panel" id="panel-reservas">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="section-title" style="margin-bottom:0">Reservas del día</div>
+        <div style="display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px">
+          <button class="rv-view-btn active" id="rv-lista" onclick="setReservaView('lista')">☰ Lista</button>
+          <button class="rv-view-btn" id="rv-cal" onclick="setReservaView('calendario')">📅 Calendario</button>
+        </div>
+      </div>
+      <div id="reservas-list-view">
+        <div id="reservas-list"></div>
+      </div>
+      <div id="reservas-cal-view" style="display:none">
+        <div id="calendario-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ESPACIOS -->
+    <div class="panel" id="panel-espacios">
+
+      <!-- MODO SELECTOR -->
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="esp-mode-btn active" id="mode-operativo" onclick="setEspacioMode('operativo')">⚡ Operativo</button>
+        <button class="esp-mode-btn" id="mode-config" onclick="setEspacioMode('config')">⚙️ Configuración</button>
+      </div>
+
+      <!-- VISTA OPERATIVA -->
+      <div id="view-operativo">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:500">Tocá + o − para actualizar la ocupación en tiempo real.</div>
+      <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;font-weight:600;color:#B91C1C;display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px">⚠️</span>
+        Estos números impactan directamente en la disponibilidad que ven los conductores en la app. Mantenerlos actualizados evita reservas en espacios ocupados.
+      </div>
+        <div id="operativo-list"></div>
+      </div>
+
+      <!-- VISTA CONFIGURACIÓN -->
+      <div id="view-config" style="display:none">
+        <div id="espacios-list"></div>
+        <button class="fab-add" onclick="showToast('Agregar espacio próximamente')">+</button>
+      </div>
+    </div>
+
+    <!-- QR SCANNER -->
+    <div class="panel" id="panel-qr">
+      <div class="qr-panel">
+        <div class="qr-viewfinder">
+          <div class="qr-corner-tl" style="position:absolute;top:16px;left:16px;width:40px;height:40px;border-top:3px solid #2B7FFF;border-left:3px solid #2B7FFF;border-radius:4px 0 0 0"></div>
+          <div style="position:absolute;top:16px;right:16px;width:40px;height:40px;border-top:3px solid #2B7FFF;border-right:3px solid #2B7FFF;border-radius:0 4px 0 0"></div>
+          <div style="position:absolute;bottom:16px;left:16px;width:40px;height:40px;border-bottom:3px solid #2B7FFF;border-left:3px solid #2B7FFF;border-radius:0 0 0 4px"></div>
+          <div style="position:absolute;bottom:16px;right:16px;width:40px;height:40px;border-bottom:3px solid #2B7FFF;border-right:3px solid #2B7FFF;border-radius:0 0 4px 0"></div>
+          <div class="qr-scan-line"></div>
+          <div class="qr-icon">📷</div>
+        </div>
+
+        <div class="qr-hint">Apuntá la cámara al código QR del conductor para validar su reserva.</div>
+
+        <div class="qr-manual">
+          <div class="qr-manual-title">O ingresá el código manualmente</div>
+          <div class="qr-input-wrap">
+            <input class="qr-input" id="qr-input" placeholder="000000" maxlength="6" oninput="this.value=this.value.replace(/\D/g,'')">
+            <button class="qr-btn" onclick="validarCodigo()">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="validacion-result" id="validacion-result">
+          <div class="vr-header">
+            <div class="vr-ico" id="vr-ico"></div>
+            <div class="vr-title" id="vr-title"></div>
+          </div>
+          <div id="vr-rows"></div>
+          <button class="btn-confirmar-entrada" id="btn-entrada" onclick="confirmarEntrada()" style="display:none">
+            ✓ Confirmar entrada
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="panel" id="panel-historial">
+      <div class="period-selector">
+        <button class="period-btn active" onclick="setPeriod(this,'semana')">Esta semana</button>
+        <button class="period-btn" onclick="setPeriod(this,'mes')">Este mes</button>
+        <button class="period-btn" onclick="setPeriod(this,'año')">Este año</button>
+      </div>
+
+      <div class="ingreso-total">
+        <div class="it-label">Ingresos del período</div>
+        <div class="it-val" id="it-val">$89.200</div>
+        <div class="it-sub" id="it-sub">48 reservas completadas</div>
+        <div class="it-grid">
+          <div class="it-item"><div class="it-item-val">32</div><div class="it-item-label">🚗 Autos</div></div>
+          <div class="it-item"><div class="it-item-val">10</div><div class="it-item-label">🏍️ Motos</div></div>
+          <div class="it-item"><div class="it-item-val">6</div><div class="it-item-label">🚲 Bicis</div></div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">Reservas por día</div>
+        <div class="bar-chart" id="bar-chart"></div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap" id="pago-filters">
+        <button class="pago-filter-btn active" onclick="setPayFilter(this,'todos')">Todos</button>
+        <button class="pago-filter-btn" onclick="setPayFilter(this,'mp')">💳 Tarjeta / App</button>
+        <button class="pago-filter-btn" onclick="setPayFilter(this,'local')">💵 Efectivo</button>
+      </div>
+      <div class="section-title">Últimas reservas</div>
+      <div id="historial-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tbtn-dashboard" onclick="switchPanel('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="tab-btn" id="tbtn-qr" onclick="switchPanel('qr')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><line x1="21" y1="16" x2="21" y2="21"/><line x1="16" y1="21" x2="21" y2="21"/><line x1="16" y1="16" x2="16" y2="16"/><line x1="11" y1="3" x2="11" y2="8"/><line x1="11" y1="13" x2="11" y2="21"/><line x1="3" y1="11" x2="8" y2="11"/><line x1="13" y1="11" x2="21" y2="11"/></svg>
+      Escanear
+    </button>
+    <button class="tab-btn" id="tbtn-espacios" onclick="switchPanel('espacios')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Espacios
+    </button>
+    <button class="tab-btn" id="tbtn-reservas" onclick="switchPanel('reservas')">
+      <div class="tab-dot"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </button>
+    <button class="tab-btn" id="tbtn-historial" onclick="switchPanel('historial')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Historial
+    </button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+</div>
+
+<script>
+// ── MOCK DATA ────────────────────────────────────────────────────────────────
+const VEH_EMO = { auto:'🚗', moto:'🏍️', 'bici-priv':'🚲' };
+const VEH_BG  = { auto:'#E8E9F0', moto:'#FFF0EA', 'bici-priv':'#F0EBF8' };
+
+const MOCK_RESERVAS = [
+  { id:'r1', conductor:'Martín G.', vehiculo:'auto', code:'847291', hora:'10:30', estado:'activa', pago:'mp', precio:1400, horas:2 },
+  { id:'r2', conductor:'Laura P.', vehiculo:'moto', code:'293847', hora:'11:00', estado:'confirmada', pago:'local', precio:640, horas:2 },
+  { id:'r3', conductor:'Diego F.', vehiculo:'auto', code:'571039', hora:'11:30', estado:'pendiente', pago:'mp', precio:700, horas:1 },
+  { id:'r4', conductor:'Ana M.', vehiculo:'bici-priv', code:'103847', hora:'12:00', estado:'confirmada', pago:'local', precio:360, horas:2 },
+  { id:'r5', conductor:'Carlos R.', vehiculo:'auto', code:'847562', hora:'12:30', estado:'pendiente', pago:'mp', precio:1400, horas:2 },
+  { id:'r6', conductor:'Sofía L.', vehiculo:'moto', code:'293011', hora:'13:00', estado:'confirmada', pago:'mp', precio:960, horas:3 },
+];
+
+const MOCK_ESPACIOS = [
+  { id:'e1', nombre:'Autos', emoji:'🚗', total:20, ocupados:8, tarifa:700, activo:true, reserva:['inmediata','mismo-dia','anticipada'], calculo:'horas' },
+  { id:'e2', nombre:'Motos', emoji:'🏍️', total:10, ocupados:5, tarifa:320, activo:true, reserva:['inmediata','mismo-dia'], calculo:'horas' },
+  { id:'e3', nombre:'Bicicletas', emoji:'🚲', total:5, ocupados:1, tarifa:180, activo:true, reserva:['inmediata'], calculo:'salida' },
+];
+
+// Teléfonos mock de conductores (en producción vendrían del backend)
+const CONDUCTORES_TEL = {
+  r1: '5491112345678',
+  r2: '5491187654321',
+  r3: '5491145678901',
+  r4: '5491198765432',
+  r5: '5491123456789',
+  r6: '5491134567890',
+};
+
+const MOCK_HISTORIAL_RESERVAS = [
+  { conductor:'Martín G.', vehiculo:'auto', fecha:'Hoy 09:00', precio:1400, pago:'mp' },
+  { conductor:'Ana M.', vehiculo:'bici-priv', fecha:'Hoy 08:30', precio:180, pago:'local' },
+  { conductor:'Pedro S.', vehiculo:'auto', fecha:'Ayer 18:00', precio:700, pago:'mp' },
+  { conductor:'Carla V.', vehiculo:'moto', fecha:'Ayer 16:30', precio:640, pago:'local' },
+  { conductor:'Luis M.', vehiculo:'auto', fecha:'Ayer 14:00', precio:1400, pago:'mp' },
+];
+
+const BARS_DATA = [4,7,5,9,8,12,6];
+const BARS_LABELS = ['L','M','X','J','V','S','D'];
+
+// Reserva válida para el QR
+const RESERVAS_VALIDAS = {
+  '847291': { conductor:'Martín G.', vehiculo:'auto', hora:'10:30', horas:2, pago:'Mercado Pago', precio:'$1.400' },
+  '293847': { conductor:'Laura P.', vehiculo:'moto', hora:'11:00', horas:2, pago:'En local', precio:'$640' },
+  '571039': { conductor:'Diego F.', vehiculo:'auto', hora:'11:30', horas:1, pago:'Mercado Pago', precio:'$700' },
+};
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+let comercioData = null;
+
+function switchAuthTab(tab) {
+  document.getElementById('atab-login').classList.toggle('active', tab==='login');
+  document.getElementById('atab-register').classList.toggle('active', tab==='register');
+  document.getElementById('auth-login').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('auth-register').style.display = tab==='register' ? 'block' : 'none';
+}
+
+function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value.trim();
+  if (!email || !pass) { showToast('Completá los campos'); return; }
+  loginSuccess(email.split('@')[0], email);
+}
+
+function doRegister() {
+  const nombre = document.getElementById('r-nombre').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  if (!nombre || !email) { showToast('Completá los campos obligatorios'); return; }
+  showToast('Registrando comercio...');
+  setTimeout(() => loginSuccess(nombre, email), 1000);
+}
+
+function devLogin() { loginSuccess('Parking Palermo', 'parking@palermo.com'); }
+
+function loginSuccess(nombre, email) {
+  comercioData = { nombre, email, inicial: nombre.charAt(0).toUpperCase() };
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('comercio-name').textContent = nombre;
+  document.getElementById('comercio-av').textContent = comercioData.inicial;
+  renderAll();
+  fetchClima();
+}
+
+// ── PANELS ───────────────────────────────────────────────────────────────────
+function switchPanel(panel) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + panel).classList.add('active');
+  document.getElementById('tbtn-' + panel).classList.add('active');
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderDashDate();
+  renderDashReservas();
+  renderReservasList();
+  renderOperativo();
+  renderHistorial();
+  renderBarChart();
+}
+
+function renderDashDate() {
+  const now = new Date();
+  const opts = { weekday:'long', day:'numeric', month:'long' };
+  document.getElementById('dash-date').textContent = now.toLocaleDateString('es-AR', opts);
+}
+
+function renderDashReservas() {
+  const proximas = MOCK_RESERVAS.slice(0, 3);
+  document.getElementById('dash-reservas').innerHTML = proximas.map(r => reservaCardHTML(r)).join('');
+}
+
+function renderReservasList() {
+  document.getElementById('reservas-list').innerHTML = MOCK_RESERVAS.map(r => reservaCardHTML(r, true)).join('');
+}
+
+function reservaCardHTML(r, showActions = false) {
+  const ESTADO_LABEL = { activa:'Activa', confirmada:'Confirmada', pendiente:'Pendiente' };
+  const pagoLabel = r.pago === 'mp' ? '💳 Mercado Pago' : '💵 En local';
+  const actions = showActions ? `
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+      <button class="rc-action-btn" style="width:100%;background:rgba(255,107,43,0.1);border-color:rgba(255,107,43,0.3);color:#FF6B2B" onclick="contactarConductor('${r.id}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Contactar por WhatsApp
+      </button>
+      <button class="rc-action-btn danger" style="width:100%;background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.3);color:#EF4444" onclick="abrirCancelarComercio('${r.id}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Cancelar reserva
+      </button>
+    </div>` : '';
+  return `<div class="reserva-card ${r.estado}" id="rcard-${r.id}">
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <div class="rc-ico" style="background:${VEH_BG[r.vehiculo]}">${VEH_EMO[r.vehiculo]}</div>
+      <div class="rc-body" style="flex:1;min-width:0">
+        <div class="rc-name">${r.conductor}</div>
+        <div class="rc-sub">${r.horas}h · ${pagoLabel} · $${r.precio}</div>
+      </div>
+      <div class="rc-meta" style="flex-shrink:0;text-align:right">
+        <div class="rc-code">${r.code}</div>
+        <div class="rc-hora">${r.hora}</div>
+        <div class="rc-badge badge-${r.estado}">${ESTADO_LABEL[r.estado]}</div>
+      </div>
+    </div>
+    ${actions}
+  </div>`;
+}
+
+// ── ESPACIOS: MODO SELECTOR ──────────────────────────────────────────────────
+let espacioMode = 'operativo';
+
+function setEspacioMode(mode) {
+  espacioMode = mode;
+  document.getElementById('mode-operativo').classList.toggle('active', mode === 'operativo');
+  document.getElementById('mode-config').classList.toggle('active', mode === 'config');
+  document.getElementById('view-operativo').style.display = mode === 'operativo' ? 'block' : 'none';
+  document.getElementById('view-config').style.display = mode === 'config' ? 'block' : 'none';
+  if (mode === 'config') renderEspacios();
+  else renderOperativo();
+}
+
+// ── VISTA OPERATIVA ───────────────────────────────────────────────────────────
+function renderOperativo() {
+  document.getElementById('operativo-list').innerHTML = MOCK_ESPACIOS.map(e => {
+    const libre = e.total - e.ocupados;
+    const pct = Math.round((e.ocupados / e.total) * 100);
+    let statusClass = 'ok', statusLabel = 'Disponible';
+    if (pct >= 100) { statusClass = 'full'; statusLabel = 'Lleno'; }
+    else if (pct >= 80) { statusClass = 'warning'; statusLabel = 'Casi lleno'; }
+    const barColor = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--yellow)' : 'var(--accent)';
+    return `
+    <div class="op-card" id="opcard-${e.id}">
+      <div class="op-header">
+        <div class="op-title">${e.emoji} ${e.nombre}</div>
+        <div class="op-status ${statusClass}">${statusLabel}</div>
+      </div>
+      <div class="op-counter">
+        <button class="op-btn op-btn-minus" id="op-minus-${e.id}"
+          onclick="updateOcupacion('${e.id}', -1)"
+          ${e.ocupados <= 0 ? 'disabled' : ''}>−</button>
+        <div class="op-nums">
+          <div class="op-num-big" id="op-num-${e.id}">${e.ocupados}</div>
+          <div class="op-num-total">de ${e.total} ocupados</div>
+        </div>
+        <button class="op-btn op-btn-plus" id="op-plus-${e.id}"
+          onclick="updateOcupacion('${e.id}', 1)"
+          ${e.ocupados >= e.total ? 'disabled' : ''}>+</button>
+      </div>
+      <div class="op-bar">
+        <div class="op-bar-fill" id="op-bar-${e.id}" style="width:${pct}%;background:${barColor}"></div>
+      </div>
+      <div class="op-footer">
+        <span>${libre} libre${libre !== 1 ? 's' : ''}</span>
+        <span>${pct}% ocupado</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateOcupacion(id, delta) {
+  const e = MOCK_ESPACIOS.find(e => e.id === id);
+  if (!e) return;
+  const newVal = e.ocupados + delta;
+  if (newVal < 0 || newVal > e.total) return;
+  e.ocupados = newVal;
+
+  // Animación bump en el número
+  const numEl = document.getElementById('op-num-' + id);
+  if (numEl) {
+    numEl.textContent = newVal;
+    numEl.classList.add('bump');
+    setTimeout(() => numEl.classList.remove('bump'), 150);
+  }
+
+  // Actualizar barra y estado sin re-render completo
+  const libre = e.total - e.ocupados;
+  const pct = Math.round((e.ocupados / e.total) * 100);
+  const barColor = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--yellow)' : 'var(--accent)';
+  const barEl = document.getElementById('op-bar-' + id);
+  if (barEl) { barEl.style.width = pct + '%'; barEl.style.background = barColor; }
+
+  // Actualizar botones
+  const minusBtn = document.getElementById('op-minus-' + id);
+  const plusBtn = document.getElementById('op-plus-' + id);
+  if (minusBtn) minusBtn.disabled = e.ocupados <= 0;
+  if (plusBtn) plusBtn.disabled = e.ocupados >= e.total;
+
+  // Actualizar status
+  const card = document.getElementById('opcard-' + id);
+  if (card) {
+    const statusEl = card.querySelector('.op-status');
+    let statusClass = 'ok', statusLabel = 'Disponible';
+    if (pct >= 100) { statusClass = 'full'; statusLabel = 'Lleno'; }
+    else if (pct >= 80) { statusClass = 'warning'; statusLabel = 'Casi lleno'; }
+    statusEl.className = 'op-status ' + statusClass;
+    statusEl.textContent = statusLabel;
+    card.querySelector('.op-footer').innerHTML = `<span>${libre} libre${libre!==1?'s':''}</span><span>${pct}% ocupado</span>`;
+  }
+
+  // Toast breve
+  const msg = delta > 0 ? `+1 ${e.emoji} ${e.nombre} · ${libre} libre${libre!==1?'s':''}` : `-1 ${e.emoji} ${e.nombre} · ${libre} libre${libre!==1?'s':''}`;
+  showToast(msg);
+
+  // Sincronizar dashboard
+  renderDashDate();
+  actualizarDashStats();
+}
+
+function actualizarDashStats() {
+  // Actualizar los números del dashboard sin full re-render
+  const totalOcup = MOCK_ESPACIOS.reduce((s,e) => s + e.ocupados, 0);
+  const totalEsp = MOCK_ESPACIOS.reduce((s,e) => s + e.total, 0);
+  const pctTotal = Math.round((totalOcup / totalEsp) * 100);
+  const ocBar = document.querySelector('.ocup-fill');
+  const ocPct = document.querySelector('.ocup-pct');
+  if (ocBar) ocBar.style.width = pctTotal + '%';
+  if (ocPct) ocPct.textContent = pctTotal + '%';
+}
+
+function renderEspacios() {
+  const reservaLabel = { inmediata:'Llegada directa', 'mismo-dia':'Reserva hoy', anticipada:'Anticipada' };
+  document.getElementById('espacios-list').innerHTML = MOCK_ESPACIOS.map(e => {
+    const libre = e.total - e.ocupados;
+    const pct = Math.round((e.ocupados / e.total) * 100);
+    return `<div class="espacio-card" id="ecard-${e.id}">
+      <div class="esp-header">
+        <div class="esp-title">${e.emoji} ${e.nombre}</div>
+        <div class="esp-toggle">
+          <span class="toggle-label">${e.activo ? 'Activo' : 'Inactivo'}</span>
+          <button class="toggle ${e.activo ? 'on' : ''}" onclick="toggleEspacio('${e.id}')"></button>
+        </div>
+      </div>
+      <div class="esp-grid">
+        <div class="esp-stat">
+          <div class="esp-stat-label">Ocupados</div>
+          <div class="esp-stat-val" style="color:var(--accent)">${e.ocupados}<span style="font-size:14px;color:var(--text2)"> / ${e.total}</span></div>
+        </div>
+        <div class="esp-stat">
+          <div class="esp-stat-label">Libres</div>
+          <div class="esp-stat-val" style="color:var(--green)">${libre}</div>
+        </div>
+        <div class="esp-stat">
+          <div class="esp-stat-label">Tarifa</div>
+          <div class="esp-stat-val" style="font-size:18px">$${e.tarifa}<span style="font-size:12px;color:var(--text2)">/h</span></div>
+        </div>
+        <div class="esp-stat">
+          <div class="esp-stat-label">Ocupación</div>
+          <div class="esp-stat-val" style="font-size:18px">${pct}%</div>
+        </div>
+      </div>
+      <div class="esp-tags">
+        ${e.reserva.map(r => `<div class="esp-tag">${reservaLabel[r]||r}</div>`).join('')}
+      </div>
+
+      <button class="btn-edit-toggle" id="btn-edit-${e.id}" onclick="toggleEditEspacio('${e.id}')">
+        ✏️ Editar configuración
+      </button>
+
+      <div class="esp-edit-form" id="edit-${e.id}">
+        <div class="edit-section-title">Tarifa y capacidad</div>
+        <div class="edit-row">
+          <span class="edit-label">Precio por hora</span>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:15px;font-weight:700">$</span>
+            <input class="edit-input" type="number" id="ef-tarifa-${e.id}" value="${e.tarifa}" min="0" step="50">
+          </div>
+        </div>
+        <div class="edit-row">
+          <span class="edit-label">Total de espacios</span>
+          <input class="edit-input" type="number" id="ef-total-${e.id}" value="${e.total}" min="1">
+        </div>
+
+        <div class="edit-section-title">Cálculo de cobro</div>
+        <select class="edit-select" id="ef-calculo-${e.id}" style="width:100%">
+          <option value="horas" ${e.calculo==='horas'?'selected':''}>Por horas (el conductor elige cuántas)</option>
+          <option value="salida" ${e.calculo==='salida'?'selected':''}>Al salir (según tiempo real)</option>
+        </select>
+
+        <div class="edit-section-title">Tipos de reserva habilitados</div>
+        <div class="check-group">
+          <label class="check-item">
+            <input type="checkbox" id="ef-inmediata-${e.id}" ${e.reserva.includes('inmediata')?'checked':''}>
+            <span class="check-item-label">⚡ Llegada directa</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="ef-mismodia-${e.id}" ${e.reserva.includes('mismo-dia')?'checked':''}>
+            <span class="check-item-label">📅 Reserva el mismo día</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="ef-anticipada-${e.id}" ${e.reserva.includes('anticipada')?'checked':''}>
+            <span class="check-item-label">🗓️ Reserva anticipada</span>
+          </label>
+        </div>
+
+        <div class="edit-actions">
+          <button class="btn-cancel" onclick="toggleEditEspacio('${e.id}')">Cancelar</button>
+          <button class="btn-save" onclick="saveEspacio('${e.id}')">Guardar cambios</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleEditEspacio(id) {
+  const form = document.getElementById('edit-' + id);
+  const btn = document.getElementById('btn-edit-' + id);
+  const isOpen = form.classList.contains('open');
+  // Cerrar todos primero
+  document.querySelectorAll('.esp-edit-form').forEach(f => f.classList.remove('open'));
+  document.querySelectorAll('.btn-edit-toggle').forEach(b => b.classList.remove('open'));
+  if (!isOpen) {
+    form.classList.add('open');
+    btn.classList.add('open');
+    btn.textContent = '✕ Cerrar edición';
+  } else {
+    btn.textContent = '✏️ Editar configuración';
+  }
+}
+
+function saveEspacio(id) {
+  const e = MOCK_ESPACIOS.find(e => e.id === id);
+  if (!e) return;
+  e.tarifa = parseInt(document.getElementById('ef-tarifa-' + id).value) || e.tarifa;
+  e.total = parseInt(document.getElementById('ef-total-' + id).value) || e.total;
+  e.calculo = document.getElementById('ef-calculo-' + id).value;
+  e.reserva = [];
+  if (document.getElementById('ef-inmediata-' + id).checked) e.reserva.push('inmediata');
+  if (document.getElementById('ef-mismodia-' + id).checked) e.reserva.push('mismo-dia');
+  if (document.getElementById('ef-anticipada-' + id).checked) e.reserva.push('anticipada');
+  if (e.reserva.length === 0) { showToast('Habilitá al menos un tipo de reserva'); return; }
+  showToast(`${e.emoji} ${e.nombre} actualizado`);
+  renderEspacios();
+}
+
+function toggleEspacio(id) {
+  const e = MOCK_ESPACIOS.find(e => e.id === id);
+  if (e) { e.activo = !e.activo; renderEspacios(); showToast(e.activo ? `${e.emoji} ${e.nombre} activado` : `${e.emoji} ${e.nombre} desactivado`); }
+}
+
+function renderHistorial() { renderHistorialFiltrado(); }
+
+function renderBarChart() {
+  const max = Math.max(...BARS_DATA);
+  document.getElementById('bar-chart').innerHTML = BARS_DATA.map((v, i) => `
+    <div class="bar-col">
+      <div class="bar" style="height:${Math.round((v/max)*100)}%"></div>
+      <div class="bar-label">${BARS_LABELS[i]}</div>
+    </div>`).join('');
+}
+
+// ── QR VALIDACIÓN ─────────────────────────────────────────────────────────────
+let codigoValidado = null;
+
+function validarCodigo() {
+  const codigo = document.getElementById('qr-input').value.trim();
+  if (codigo.length < 4) { showToast('Ingresá el código de 6 dígitos'); return; }
+
+  const reserva = RESERVAS_VALIDAS[codigo];
+  const result = document.getElementById('validacion-result');
+  result.className = 'validacion-result';
+
+  if (reserva) {
+    codigoValidado = { codigo, ...reserva };
+    result.classList.add('ok');
+    document.getElementById('vr-ico').textContent = '✅';
+    document.getElementById('vr-title').textContent = 'Reserva válida';
+    document.getElementById('vr-rows').innerHTML = `
+      <div class="vr-row"><span class="vr-label">Conductor</span><span class="vr-val">${reserva.conductor}</span></div>
+      <div class="vr-row"><span class="vr-label">Vehículo</span><span class="vr-val">${VEH_EMO[reserva.vehiculo]} ${reserva.vehiculo}</span></div>
+      <div class="vr-row"><span class="vr-label">Hora reservada</span><span class="vr-val">${reserva.hora}</span></div>
+      <div class="vr-row"><span class="vr-label">Tiempo</span><span class="vr-val">${reserva.horas}h</span></div>
+      <div class="vr-row"><span class="vr-label">Pago</span><span class="vr-val">${reserva.pago}</span></div>
+      <div class="vr-row"><span class="vr-label">Total</span><span class="vr-val" style="color:var(--accent)">${reserva.precio}</span></div>`;
+    document.getElementById('btn-entrada').style.display = 'block';
+  } else {
+    codigoValidado = null;
+    result.classList.add('error');
+    document.getElementById('vr-ico').textContent = '❌';
+    document.getElementById('vr-title').textContent = 'Código inválido';
+    document.getElementById('vr-rows').innerHTML = `<div class="vr-row"><span class="vr-label">El código ${codigo} no corresponde a ninguna reserva activa.</span></div>`;
+    document.getElementById('btn-entrada').style.display = 'none';
+  }
+}
+
+function confirmarEntrada() {
+  if (!codigoValidado) return;
+  const vehiculo = codigoValidado.vehiculo;
+
+  // Mapear vehículo al espacio correspondiente
+  const mapaEspacio = { auto:'e1', moto:'e2', 'bici-priv':'e3' };
+  const espacioId = mapaEspacio[vehiculo];
+  const espacio = MOCK_ESPACIOS.find(e => e.id === espacioId);
+
+  if (espacio && espacio.ocupados < espacio.total) {
+    espacio.ocupados++;
+    showToast(`✓ Entrada confirmada · ${VEH_EMO[vehiculo]} descontado automáticamente`);
+  } else {
+    showToast(`✓ Entrada confirmada para ${codigoValidado.conductor}`);
+  }
+
+  document.getElementById('qr-input').value = '';
+  document.getElementById('validacion-result').className = 'validacion-result';
+  document.getElementById('btn-entrada').style.display = 'none';
+  codigoValidado = null;
+
+  // Sincronizar vista operativa y dashboard
+  renderOperativo();
+  actualizarDashStats();
+}
+
+// ── ACCIONES COMERCIO ────────────────────────────────────────────────────────
+let reservaACancelar = null;
+let reservaDetalleActual = null;
+
+function verDetalleReserva(id) {
+  const r = MOCK_RESERVAS.find(r => r.id === id);
+  if (!r) return;
+  reservaDetalleActual = r;
+  const pagoLabel = r.pago === 'mp' ? '💳 Mercado Pago' : '💵 En local';
+  const ESTADO_LABEL = { activa:'Activa ✓', confirmada:'Confirmada ✓', pendiente:'Pendiente' };
+
+  document.getElementById('pdc-nombre').textContent = r.conductor;
+  document.getElementById('pdc-hora').textContent = `Reserva para las ${r.hora}`;
+  document.getElementById('pdc-code').textContent = r.code;
+  document.getElementById('pdc-info').innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px"><span style="color:var(--text2)">Vehículo</span><span style="font-weight:600">${VEH_EMO[r.vehiculo]}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px"><span style="color:var(--text2)">Tiempo</span><span style="font-weight:600">${r.horas}h</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px"><span style="color:var(--text2)">Pago</span><span style="font-weight:600">${pagoLabel}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px"><span style="color:var(--text2)">Total</span><span style="font-weight:700;color:var(--accent)">$${r.precio}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 16px;font-size:14px"><span style="color:var(--text2)">Estado</span><span style="font-weight:600;color:var(--green)">${ESTADO_LABEL[r.estado]}</span></div>`;
+
+  document.getElementById('panel-detalle-com').style.display = 'flex';
+}
+
+function cerrarDetalleCom() {
+  document.getElementById('panel-detalle-com').style.display = 'none';
+  reservaDetalleActual = null;
+}
+
+function contactarConductorActual() {
+  if (reservaDetalleActual) contactarConductor(reservaDetalleActual.id);
+}
+
+function mostrarConfirmacionFinal() {
+  document.getElementById('com-modal-paso1').style.display = 'none';
+  document.getElementById('com-modal-paso2').style.display = 'block';
+}
+
+function volverPaso1() {
+  document.getElementById('com-modal-paso2').style.display = 'none';
+  document.getElementById('com-modal-paso1').style.display = 'block';
+}
+
+function contactarConductor(id) {
+  const r = MOCK_RESERVAS.find(r => r.id === id);
+  if (!r) return;
+  const tel = CONDUCTORES_TEL[id] || '5491100000000';
+  const msg = encodeURIComponent(
+    `Hola ${r.conductor.split(' ')[0]}! Te contactamos desde ${comercioData?.nombre || 'el estacionamiento'} sobre tu reserva #${r.code} para las ${r.hora}. `
+  );
+  const url = `https://wa.me/${tel}?text=${msg}`;
+  window.open(url, '_blank');
+  showToast(`Abriendo WhatsApp con ${r.conductor.split(' ')[0]}...`);
+}
+
+function abrirCancelarComercio(id) {
+  const r = MOCK_RESERVAS.find(r => r.id === id);
+  if (!r) return;
+  reservaACancelar = r;
+  document.getElementById('com-modal-info').innerHTML = `
+    <div class="com-modal-row"><span class="com-modal-row-label">Conductor</span><span class="com-modal-row-val">${r.conductor}</span></div>
+    <div class="com-modal-row"><span class="com-modal-row-label">Código</span><span class="com-modal-row-val" style="font-family:'Space Grotesk',sans-serif;letter-spacing:2px">${r.code}</span></div>
+    <div class="com-modal-row"><span class="com-modal-row-label">Vehículo</span><span class="com-modal-row-val">${VEH_EMO[r.vehiculo]}</span></div>
+    <div class="com-modal-row"><span class="com-modal-row-label">Hora reservada</span><span class="com-modal-row-val">${r.hora}</span></div>
+    <div class="com-modal-row"><span class="com-modal-row-label">Pago</span><span class="com-modal-row-val">${r.pago === 'mp' ? '💳 Se reintegrará automáticamente' : '🏪 En local — sin cargo'}</span></div>`;
+
+  // Resetear motivos
+  document.querySelectorAll('.motivo-opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById('com-modal-paso1').style.display = 'block';
+  document.getElementById('com-modal-paso2').style.display = 'none';
+  document.getElementById('modal-com-cancelar').classList.add('open');
+}
+
+function selectMotivo(id) {
+  document.querySelectorAll('.motivo-opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById(id).classList.add('selected');
+}
+
+function cerrarCancelarComercio() {
+  document.getElementById('modal-com-cancelar').classList.remove('open');
+  reservaACancelar = null;
+}
+
+function confirmarCancelacionComercio() {
+  if (!reservaACancelar) return;
+  const r = reservaACancelar;
+
+  // Liberar espacio automáticamente
+  const mapaEspacio = { auto:'e1', moto:'e2', 'bici-priv':'e3' };
+  const esp = MOCK_ESPACIOS.find(e => e.id === mapaEspacio[r.vehiculo]);
+  if (esp && esp.ocupados > 0) esp.ocupados--;
+
+  // Quitar de la lista
+  const idx = MOCK_RESERVAS.findIndex(x => x.id === r.id);
+  if (idx > -1) MOCK_RESERVAS.splice(idx, 1);
+
+  // Obtener motivo seleccionado
+  const motivoEl = document.querySelector('.motivo-opt.selected input');
+  const motivo = motivoEl ? motivoEl.value : 'otro';
+  const motivoTextos = {
+    seguridad: 'razones de seguridad',
+    espacio: 'el espacio ya no está disponible',
+    pago: 'un problema con el pago',
+    otro: 'motivos operativos',
+  };
+  const motivoTexto = motivoTextos[motivo] || 'motivos operativos';
+
+  cerrarCancelarComercio();
+  cerrarDetalleCom();
+  renderReservasList();
+  renderDashReservas();
+  renderOperativo();
+  actualizarDashStats();
+
+  // Abrir WhatsApp automáticamente con mensaje de cancelación
+  const tel = CONDUCTORES_TEL[r.id] || '5491100000000';
+  const msg = encodeURIComponent(
+    `Hola ${r.conductor.split(' ')[0]}! Te informamos que tu reserva #${r.code} en ${comercioData?.nombre || 'el estacionamiento'} (${r.hora}) fue cancelada por ${motivoTexto}. Disculpá los inconvenientes.${r.pago === 'mp' ? ' El reintegro se procesará automáticamente.' : ''}`
+  );
+  setTimeout(() => window.open(`https://wa.me/${tel}?text=${msg}`, '_blank'), 300);
+
+  showToast(`✓ Reserva #${r.code} cancelada · Abriendo WhatsApp...`);
+}
+
+// Cerrar modal tocando fondo
+document.getElementById('modal-com-cancelar')?.addEventListener('click', function(e) {
+  if (e.target === this) cerrarCancelarComercio();
+});
+
+function setPeriod(btn, period) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const data = {
+    semana: { val:'$89.200', sub:'48 reservas completadas' },
+    mes:    { val:'$342.800', sub:'187 reservas completadas' },
+    año:    { val:'$3.840.000', sub:'2.104 reservas completadas' },
+  };
+  document.getElementById('it-val').textContent = data[period].val;
+  document.getElementById('it-sub').textContent = data[period].sub;
+}
+
+// ── CONFIGURACIÓN COMERCIO ───────────────────────────────────────────────────
+const CONFIG = {
+  dias: [1,2,3,4,5],  // 0=Dom, 1=Lun... 6=Sab
+  apertura: '08:00',
+  cierre: '22:00',
+  es24h: false,
+  feriados: [
+    { fecha: '2026-05-25', desc: 'Día de la Patria' },
+    { fecha: '2026-07-09', desc: 'Día de la Independencia' },
+  ],
+};
+
+const DIAS_LABELS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function openConfig() {
+  document.getElementById('config-panel').classList.add('active');
+  renderConfigPanel();
+}
+
+function closeConfig() {
+  document.getElementById('config-panel').classList.remove('active');
+}
+
+function renderConfigPanel() {
+  // Días
+  document.getElementById('dias-grid').innerHTML = DIAS_LABELS.map((d, i) =>
+    `<button class="dia-btn ${CONFIG.dias.includes(i)?'active':''}" onclick="toggleDia(${i})">${d}</button>`
+  ).join('');
+
+  // Horarios
+  document.getElementById('hora-apertura').value = CONFIG.apertura;
+  document.getElementById('hora-cierre').value = CONFIG.cierre;
+  const t24 = document.getElementById('toggle-24h');
+  t24.className = 'toggle ' + (CONFIG.es24h ? 'on' : '');
+  document.getElementById('hora-apertura').disabled = CONFIG.es24h;
+  document.getElementById('hora-cierre').disabled = CONFIG.es24h;
+
+  // Info comercio
+  if (comercioData) {
+    document.getElementById('cfg-nombre').value = comercioData.nombre || '';
+    document.getElementById('cfg-dir').value = comercioData.dir || 'Florida 800, CABA';
+    document.getElementById('cfg-tel').value = comercioData.tel || '';
+  }
+
+  renderFeriados();
+}
+
+function toggleDia(i) {
+  const idx = CONFIG.dias.indexOf(i);
+  if (idx > -1) CONFIG.dias.splice(idx, 1);
+  else CONFIG.dias.push(i);
+  renderConfigPanel();
+}
+
+function toggle24h() {
+  CONFIG.es24h = !CONFIG.es24h;
+  const t = document.getElementById('toggle-24h');
+  t.className = 'toggle ' + (CONFIG.es24h ? 'on' : '');
+  document.getElementById('hora-apertura').disabled = CONFIG.es24h;
+  document.getElementById('hora-cierre').disabled = CONFIG.es24h;
+  showToast(CONFIG.es24h ? 'Modo 24 horas activado' : 'Horario personalizado activado');
+}
+
+function renderFeriados() {
+  document.getElementById('feriados-list').innerHTML = CONFIG.feriados.map((f, i) => `
+    <div class="feriado-item">
+      <div style="flex:1">
+        <div class="feriado-fecha">${formatFecha(f.fecha)}</div>
+        <div class="feriado-desc">${f.desc}</div>
+      </div>
+      <button class="feriado-del" onclick="eliminarFeriado(${i})">✕</button>
+    </div>`).join('');
+}
+
+function formatFecha(dateStr) {
+  const [y,m,d] = dateStr.split('-');
+  const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${parseInt(d)} ${meses[parseInt(m)]} ${y}`;
+}
+
+function agregarFeriado() {
+  const fecha = document.getElementById('feriado-fecha').value;
+  if (!fecha) { showToast('Elegí una fecha'); return; }
+  if (CONFIG.feriados.find(f => f.fecha === fecha)) { showToast('Esa fecha ya está agregada'); return; }
+  CONFIG.feriados.push({ fecha, desc: 'Cierre especial' });
+  CONFIG.feriados.sort((a,b) => a.fecha.localeCompare(b.fecha));
+  document.getElementById('feriado-fecha').value = '';
+  renderFeriados();
+  showToast('Feriado agregado');
+}
+
+function eliminarFeriado(i) {
+  CONFIG.feriados.splice(i, 1);
+  renderFeriados();
+  showToast('Feriado eliminado');
+}
+
+function saveConfig() {
+  CONFIG.apertura = document.getElementById('hora-apertura').value;
+  CONFIG.cierre = document.getElementById('hora-cierre').value;
+  if (comercioData) {
+    comercioData.nombre = document.getElementById('cfg-nombre').value || comercioData.nombre;
+    comercioData.dir = document.getElementById('cfg-dir').value;
+    comercioData.tel = document.getElementById('cfg-tel').value;
+    document.getElementById('comercio-name').textContent = comercioData.nombre;
+    document.getElementById('comercio-av').textContent = comercioData.nombre.charAt(0).toUpperCase();
+  }
+
+  // Mostrar resumen horario en topbar
+  const diasAbiertos = CONFIG.dias.length;
+  const horario = CONFIG.es24h ? '24hs' : `${CONFIG.apertura} – ${CONFIG.cierre}`;
+  showToast(`Guardado · ${diasAbiertos} días · ${horario}`);
+  closeConfig();
+}
+
+// ── VISTA CALENDARIO ─────────────────────────────────────────────────────────
+let calDate = new Date();
+let calSelectedDay = new Date().getDate();
+let payFilter = 'todos';
+
+function setReservaView(view) {
+  document.getElementById('rv-lista').classList.toggle('active', view === 'lista');
+  document.getElementById('rv-cal').classList.toggle('active', view === 'calendario');
+  document.getElementById('reservas-list-view').style.display = view === 'lista' ? 'block' : 'none';
+  document.getElementById('reservas-cal-view').style.display = view === 'calendario' ? 'block' : 'none';
+  if (view === 'calendario') renderCalendario();
+}
+
+function renderCalendario() {
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DIAS = ['D','L','M','X','J','V','S'];
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  // Días con reservas (mock)
+  const diasConReservas = [3, 7, 10, 14, 18, 20, 21, 25];
+
+  let html = `<div class="cal-month-nav">
+    <button class="cal-nav-btn" onclick="calNavMonth(-1)">‹</button>
+    <div class="cal-month-title">${MESES[month]} ${year}</div>
+    <button class="cal-nav-btn" onclick="calNavMonth(1)">›</button>
+  </div>
+  <div class="cal-grid">
+    ${DIAS.map(d => `<div class="cal-day-label">${d}</div>`).join('')}
+    ${Array(firstDay).fill('<div class="cal-day empty"></div>').join('')}
+    ${Array.from({length: daysInMonth}, (_, i) => {
+      const day = i + 1;
+      const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+      const isSelected = day === calSelectedDay;
+      const hasRes = diasConReservas.includes(day);
+      return `<div class="cal-day ${isToday?'today':''} ${isSelected?'selected':''} ${hasRes?'has-reservas':''}"
+        onclick="selectCalDay(${day})">
+        <div class="cal-day-num">${day}</div>
+        ${hasRes && !isSelected ? '<div class="cal-dot"></div>' : ''}
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  // Reservas del día seleccionado
+  const reservasDelDia = MOCK_RESERVAS.filter((_, i) => (i % 7) + 1 === calSelectedDay % 7 + 1).slice(0, 3);
+  html += `<div class="cal-selected-reservas">
+    <div class="cal-selected-title">Reservas del ${calSelectedDay} de ${MESES[month]}</div>
+    ${reservasDelDia.length
+      ? reservasDelDia.map(r => reservaCardHTML(r)).join('')
+      : '<div style="text-align:center;color:var(--text2);font-size:14px;padding:20px 0">Sin reservas este día</div>'}
+  </div>`;
+
+  document.getElementById('calendario-wrap').innerHTML = html;
+}
+
+function calNavMonth(delta) {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
+  renderCalendario();
+}
+
+function selectCalDay(day) {
+  calSelectedDay = day;
+  renderCalendario();
+}
+
+// ── FILTROS HISTORIAL ─────────────────────────────────────────────────────────
+function setPayFilter(btn, filter) {
+  payFilter = filter;
+  document.querySelectorAll('.pago-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistorialFiltrado();
+}
+
+function renderHistorialFiltrado() {
+  const filtrado = payFilter === 'todos'
+    ? MOCK_HISTORIAL_RESERVAS
+    : MOCK_HISTORIAL_RESERVAS.filter(h => h.pago === payFilter);
+
+  const total = filtrado.reduce((s,h) => s + h.precio, 0);
+
+  document.getElementById('historial-list').innerHTML = `
+    <div style="background:var(--accent-light);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:600;color:var(--accent)">${filtrado.length} transacciones</span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:16px;color:var(--accent)">$${total.toLocaleString('es-AR')}</span>
+    </div>
+    ${filtrado.map(h => `
+    <div class="reserva-card confirmada" style="cursor:default">
+      <div class="rc-ico" style="background:${VEH_BG[h.vehiculo]}">${VEH_EMO[h.vehiculo]}</div>
+      <div class="rc-body">
+        <div class="rc-name">${h.conductor}</div>
+        <div class="rc-sub">${h.fecha}</div>
+      </div>
+      <div class="rc-meta">
+        <div class="rc-code" style="font-size:15px">$${h.precio}</div>
+        <div class="rc-hora">${h.pago === 'mp' ? '💳 Tarjeta/App' : '💵 Efectivo'}</div>
+      </div>
+    </div>`).join('')}
+    ${filtrado.length === 0 ? '<div style="text-align:center;color:var(--text2);font-size:14px;padding:30px 0">Sin transacciones con este filtro</div>' : ''}`;
+}
+
+// ── CLIMA ─────────────────────────────────────────────────────────────────────
+const CLIMA_ICONS = {
+  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+  45:'🌫️', 48:'🌫️',
+  51:'🌦️', 53:'🌦️', 55:'🌧️',
+  61:'🌧️', 63:'🌧️', 65:'🌧️',
+  71:'❄️', 73:'❄️', 75:'❄️',
+  80:'🌦️', 81:'🌧️', 82:'⛈️',
+  95:'⛈️', 96:'⛈️', 99:'⛈️',
+};
+const CLIMA_DESC = {
+  0:'Despejado', 1:'Mayormente despejado', 2:'Parcialmente nublado', 3:'Nublado',
+  45:'Niebla', 48:'Niebla',
+  51:'Llovizna leve', 53:'Llovizna', 55:'Llovizna intensa',
+  61:'Lluvia leve', 63:'Lluvia', 65:'Lluvia intensa',
+  71:'Nieve leve', 73:'Nieve', 75:'Nevada intensa',
+  80:'Chaparrón leve', 81:'Chaparrón', 82:'Chaparrón intenso',
+  95:'Tormenta', 96:'Tormenta con granizo', 99:'Tormenta intensa',
+};
+
+async function fetchClima() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-34.6037&longitude=-58.3816&current=temperature_2m,relative_humidity_2m,weathercode,windspeed_10m&hourly=temperature_2m,weathercode,precipitation_probability&forecast_days=1&timezone=America/Argentina/Buenos_Aires');
+    const data = await res.json();
+    const c = data.current;
+    const code = c.weathercode;
+    const temp = Math.round(c.temperature_2m);
+    const hum = c.relative_humidity_2m;
+    const viento = Math.round(c.windspeed_10m);
+    const icon = CLIMA_ICONS[code] || '🌡️';
+    const desc = CLIMA_DESC[code] || 'Variable';
+
+    // Actualizar UI actual
+    const iconEl = document.getElementById('clima-icon');
+    const tempEl = document.getElementById('clima-temp');
+    const descEl = document.getElementById('clima-desc');
+    const extraEl = document.getElementById('clima-extra');
+    if (iconEl) iconEl.textContent = icon;
+    if (tempEl) tempEl.textContent = temp + '°';
+    if (descEl) descEl.textContent = desc;
+    if (extraEl) extraEl.textContent = `Humedad ${hum}% · Viento ${viento}km/h`;
+
+    // Forecast horario — próximas 8 horas desde ahora
+    const nowHour = new Date().getHours();
+    const hours = data.hourly.time.map((t, i) => ({
+      hora: new Date(t).getHours(),
+      temp: Math.round(data.hourly.temperature_2m[i]),
+      code: data.hourly.weathercode[i],
+      prob: data.hourly.precipitation_probability[i],
+    })).filter(h => h.hora >= nowHour).slice(0, 8);
+
+    const LLUVIA_CODES = [51,53,55,61,63,65,80,81,82,95,96,99];
+    const proximaLluvia = hours.find(h => LLUVIA_CODES.includes(h.code) || h.prob >= 50);
+
+    // Alerta con horario de lluvia
+    const alertEl = document.getElementById('clima-alert');
+    const alertMsg = document.getElementById('clima-alert-msg');
+    if (alertEl) {
+      if (LLUVIA_CODES.includes(code)) {
+        alertEl.style.display = 'flex';
+        if (alertMsg) alertMsg.textContent = `${desc} ahora — mayor demanda de espacios cubiertos`;
+      } else if (proximaLluvia) {
+        alertEl.style.display = 'flex';
+        if (alertMsg) alertMsg.textContent = `Lluvia esperada a las ${String(proximaLluvia.hora).padStart(2,'0')}:00 (${proximaLluvia.prob}% prob.) — anticipá la demanda`;
+      }
+    }
+
+    // Renderizar forecast horario en la barra de clima
+    renderForecastHorario(hours);
+
+    return { temp, desc, icon, hum, viento, code };
+  } catch(e) {
+    console.log('Clima no disponible:', e);
+    return null;
+  }
+}
+
+function renderForecastHorario(hours) {
+  const LLUVIA_CODES = [51,53,55,61,63,65,80,81,82,95,96,99];
+  const existing = document.getElementById('clima-forecast');
+  if (existing) existing.remove();
+
+  const bar = document.getElementById('clima-bar');
+  if (!bar || !hours.length) return;
+
+  const div = document.createElement('div');
+  div.id = 'clima-forecast';
+  div.style.cssText = 'border-top:1px solid rgba(255,255,255,0.06);padding:8px 0 2px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;';
+
+  div.innerHTML = hours.map(h => {
+    const icon = CLIMA_ICONS[h.code] || '🌡️';
+    const esLluvia = LLUVIA_CODES.includes(h.code) || h.prob >= 50;
+    const probColor = h.prob >= 70 ? '#60a5fa' : h.prob >= 40 ? '#93c5fd' : 'rgba(255,255,255,0.25)';
+    return `<div style="flex:1;min-width:44px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 4px">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4)">${String(h.hora).padStart(2,'0')}hs</div>
+      <div style="font-size:16px">${icon}</div>
+      <div style="font-size:11px;font-weight:700;color:white">${h.temp}°</div>
+      ${h.prob > 0 ? `<div style="font-size:9px;font-weight:700;color:${probColor}">${h.prob}%</div>` : '<div style="font-size:9px;color:transparent">0%</div>'}
+    </div>`;
+  }).join('');
+
+  bar.appendChild(div);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// QR enter key
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('qr-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') validarCodigo();
+  });
+});
+</script>
+</body>
+</html>

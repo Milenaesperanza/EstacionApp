@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EstacionApp · Reservar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand: #1A1F2E;
+  --accent: #00D68F;
+  --surface: #FFFFFF;
+  --bg: #F4F5F7;
+  --text: #1A1F2E;
+  --text2: #6B7280;
+  --border: rgba(26,31,46,0.1);
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --orange: #FF6B2B;
+  --purple: #7B5EA7;
+  --blue: #00B4D8;
+}
+html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+#app { max-width: 430px; margin: 0 auto; background: var(--surface); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* HEADER */
+.header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 10;
+}
+.back-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; color: var(--text2);
+  text-decoration: none; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.back-btn:hover { background: #e8e9ec; }
+.header-info { flex: 1; min-width: 0; }
+.header-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-addr { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* STEPS INDICATOR */
+.steps-bar {
+  display: flex; align-items: center; padding: 16px 20px; gap: 0;
+}
+.step-item { display: flex; align-items: center; gap: 6px; flex: 1; }
+.step-item:last-child { flex: 0; }
+.step-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--text2);
+  background: var(--surface); flex-shrink: 0; transition: all 0.3s;
+}
+.step-circle.active { background: var(--brand); border-color: var(--brand); color: white; }
+.step-circle.done { background: var(--accent); border-color: var(--accent); color: var(--brand); }
+.step-line { flex: 1; height: 2px; background: var(--border); margin: 0 4px; transition: background 0.3s; }
+.step-line.done { background: var(--accent); }
+.step-label { font-size: 10px; color: var(--text2); font-weight: 500; white-space: nowrap; display: none; }
+
+/* SECTIONS */
+.section { padding: 20px; display: none; flex-direction: column; gap: 16px; flex: 1; }
+.section.active { display: flex; }
+
+.section-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.3px; }
+.section-sub { font-size: 14px; color: var(--text2); margin-top: -8px; }
+
+/* VEHICLE SELECTOR */
+.vehicle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vehicle-card {
+  background: var(--bg); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 16px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; transition: all 0.15s;
+}
+.vehicle-card:hover { border-color: var(--brand); }
+.vehicle-card.selected { border-color: var(--brand); background: rgba(26,31,46,0.04); }
+.vehicle-card.selected.auto { border-color: var(--brand); background: rgba(26,31,46,0.06); }
+.vehicle-card.selected.moto { border-color: var(--orange); background: rgba(255,107,43,0.06); }
+.vehicle-card.selected.bici { border-color: var(--purple); background: rgba(123,94,167,0.06); }
+.vehicle-emoji { font-size: 28px; }
+.vehicle-name { font-size: 13px; font-weight: 600; }
+.vehicle-price { font-size: 11px; color: var(--text2); }
+
+/* TIPO DE RESERVA */
+.option-list { display: flex; flex-direction: column; gap: 10px; }
+.option-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  cursor: pointer; transition: all 0.15s;
+}
+.option-card:hover { border-color: var(--brand); }
+.option-card.selected { border-color: var(--brand); background: rgba(26,31,46,0.04); }
+.option-ico {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.option-body { flex: 1; }
+.option-name { font-weight: 600; font-size: 15px; }
+.option-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.option-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.option-card.selected .option-check { background: var(--brand); border-color: var(--brand); }
+.option-card.selected .option-check::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
+
+/* PAGO */
+.pago-options { display: flex; flex-direction: column; gap: 10px; }
+
+/* HORAS PICKER */
+.horas-wrap { background: var(--bg); border-radius: var(--radius); padding: 20px; text-align: center; }
+.horas-title { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 12px; }
+.horas-ctrl { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.hora-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface);
+  font-size: 22px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; color: var(--text);
+}
+.hora-btn:hover { border-color: var(--brand); }
+.hora-btn:active { transform: scale(0.93); }
+.horas-num { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 48px; letter-spacing: -2px; min-width: 60px; }
+.horas-unit { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+/* FECHA / HORA */
+.datetime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dt-field { display: flex; flex-direction: column; gap: 6px; }
+.dt-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.dt-input {
+  height: 48px; border-radius: var(--radius-sm, 10px);
+  border: 1.5px solid var(--border); background: var(--bg);
+  padding: 0 14px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+.dt-input:focus { border-color: var(--brand); background: var(--surface); }
+
+/* RESUMEN */
+.resumen-card {
+  background: var(--bg); border-radius: var(--radius);
+  overflow: hidden;
+}
+.resumen-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.resumen-row:last-child { border-bottom: none; }
+.resumen-label { color: var(--text2); }
+.resumen-val { font-weight: 600; }
+.resumen-total {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px; background: var(--brand); border-radius: var(--radius);
+  color: white;
+}
+.resumen-total-label { font-size: 15px; font-weight: 600; }
+.resumen-total-val { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; }
+
+.pago-nota {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,214,143,0.08); border: 1px solid rgba(0,214,143,0.2);
+  border-radius: 10px; padding: 12px 14px;
+  font-size: 13px; color: var(--text);
+}
+.pago-nota svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--accent); }
+
+/* METODO PAGO */
+.metodo-list { display: flex; flex-direction: column; gap: 8px; }
+.metodo-card {
+  display: flex; align-items: center; gap: 12px;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; cursor: pointer; transition: all 0.15s;
+  background: var(--surface);
+}
+.metodo-card:hover { border-color: var(--brand); }
+.metodo-card.selected { border-color: var(--accent); background: rgba(0,214,143,0.05); }
+.metodo-ico { font-size: 24px; flex-shrink: 0; }
+.metodo-body { flex: 1; }
+.metodo-name { font-weight: 600; font-size: 14px; }
+.metodo-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.metodo-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.metodo-card.selected .metodo-check { background: var(--accent); border-color: var(--accent); }
+.metodo-card.selected .metodo-check::after { content: '✓'; color: var(--brand); font-size: 11px; font-weight: 800; }
+
+/* CONFIRMACION */
+.confirm-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 20px 0; }
+.confirm-icon { width: 80px; height: 80px; border-radius: 50%; background: rgba(0,214,143,0.12); border: 3px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+.confirm-title { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.5px; }
+.confirm-sub { font-size: 15px; color: var(--text2); max-width: 280px; line-height: 1.5; }
+
+/* QR */
+.qr-wrap {
+  background: var(--bg); border-radius: var(--radius);
+  padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: 100%;
+}
+.qr-code {
+  width: 160px; height: 160px;
+  background: white; border-radius: 10px;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.qr-pattern {
+  width: 140px; height: 140px;
+  background-image:
+    repeating-linear-gradient(0deg, #1A1F2E 0px, #1A1F2E 8px, transparent 8px, transparent 16px),
+    repeating-linear-gradient(90deg, #1A1F2E 0px, #1A1F2E 8px, transparent 8px, transparent 16px);
+  background-size: 16px 16px;
+  opacity: 0.15;
+  position: absolute;
+}
+.qr-logo { position: relative; z-index: 1; font-size: 40px; }
+.qr-code-num {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 800;
+  font-size: 28px; letter-spacing: 4px; color: var(--brand);
+}
+.qr-hint { font-size: 12px; color: var(--text2); text-align: center; }
+
+.timer-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--brand); color: white;
+  border-radius: 100px; padding: 8px 16px;
+  font-size: 14px; font-weight: 600;
+  width: 100%; justify-content: center;
+}
+.timer-num { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; color: var(--accent); }
+
+/* BTN */
+.btn-main {
+  width: 100%; height: 54px; border-radius: 100px;
+  border: none; background: var(--brand); color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s, background 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-main:hover { background: #2d3448; }
+.btn-main:active { transform: scale(0.98); }
+.btn-main:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-main.accent { background: var(--accent); color: var(--brand); }
+.btn-main.accent:hover { background: #00c47e; }
+
+.btn-ghost {
+  width: 100%; height: 48px; border-radius: 100px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-ghost:hover { background: var(--bg); }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: var(--brand); color: white; font-size: 13px; font-weight: 500;
+  padding: 10px 20px; border-radius: 100px; opacity: 0;
+  transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999;
+}
+#toast.show { opacity: 1; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.section.active { animation: fadeUp 0.3s ease both; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div class="header">
+    <a class="back-btn" id="back-btn" href="estacionapp.html">←</a>
+    <div class="header-info">
+      <div class="header-name" id="h-name">Cargando...</div>
+      <div class="header-addr" id="h-addr"></div>
+    </div>
+  </div>
+
+  <!-- Steps bar -->
+  <div class="steps-bar">
+    <div class="step-item">
+      <div class="step-circle active" id="sc-1">1</div>
+      <div class="step-line" id="sl-1"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-2">2</div>
+      <div class="step-line" id="sl-2"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-3">3</div>
+      <div class="step-line" id="sl-3"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-4">4</div>
+    </div>
+  </div>
+
+  <!-- PASO 1: Vehículo + tipo de reserva -->
+  <div class="section active" id="step-1">
+    <div class="section-title">Tu vehículo</div>
+    <div class="vehicle-grid" id="vehicle-grid"></div>
+
+    <div class="section-title" style="margin-top:4px">Tipo de reserva</div>
+    <div class="option-list" id="reserva-list"></div>
+
+    <button class="btn-main" onclick="goStep(2)" id="btn-paso1">Continuar</button>
+  </div>
+
+  <!-- PASO 2: Horario -->
+  <div class="section" id="step-2">
+    <div class="section-title">¿Cuánto tiempo?</div>
+    <div class="section-sub" id="calculo-hint"></div>
+
+    <div class="horas-wrap" id="horas-wrap">
+      <div class="horas-title">Horas estimadas</div>
+      <div class="horas-ctrl">
+        <button class="hora-btn" onclick="cambiarHoras(-1)">−</button>
+        <div>
+          <div class="horas-num" id="horas-num">2</div>
+          <div class="horas-unit">horas</div>
+        </div>
+        <button class="hora-btn" onclick="cambiarHoras(1)">+</button>
+      </div>
+    </div>
+
+    <div id="datetime-wrap" style="display:none">
+      <div class="datetime-grid">
+        <div class="dt-field">
+          <div class="dt-label">Fecha</div>
+          <input type="date" class="dt-input" id="dt-fecha">
+        </div>
+        <div class="dt-field">
+          <div class="dt-label">Hora de llegada</div>
+          <input type="time" class="dt-input" id="dt-hora">
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen-card" id="precio-preview">
+      <div class="resumen-row">
+        <span class="resumen-label" id="prev-label">Tarifa</span>
+        <span class="resumen-val" id="prev-tarifa"></span>
+      </div>
+      <div class="resumen-row" id="prev-horas-row">
+        <span class="resumen-label">Tiempo</span>
+        <span class="resumen-val" id="prev-horas"></span>
+      </div>
+    </div>
+
+    <button class="btn-main" onclick="goStep(3)">Ver resumen</button>
+    <button class="btn-ghost" onclick="goStep(1)">← Atrás</button>
+  </div>
+
+  <!-- PASO 3: Resumen + pago -->
+  <div class="section" id="step-3">
+    <div class="section-title">Resumen</div>
+
+    <div class="resumen-card" id="resumen-detalle"></div>
+    <div class="resumen-total" id="resumen-total-wrap">
+      <span class="resumen-total-label">Total estimado</span>
+      <span class="resumen-total-val" id="total-val">$0</span>
+    </div>
+
+    <div id="metodo-wrap">
+      <div class="section-title" style="font-size:16px;margin-bottom:-4px">Método de pago</div>
+      <div class="metodo-list" id="metodo-list"></div>
+    </div>
+
+    <div class="pago-nota" id="pago-local-nota" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Este estacionamiento solo acepta pago en el local. Reservá y abonás al llegar.
+    </div>
+
+    <button class="btn-main accent" id="btn-confirmar" onclick="confirmarReserva()">
+      Confirmar reserva
+    </button>
+    <button class="btn-ghost" onclick="goStep(2)">← Atrás</button>
+  </div>
+
+  <!-- PASO 4: Confirmación + QR -->
+  <div class="section" id="step-4">
+    <div class="confirm-wrap">
+      <div class="confirm-icon">✅</div>
+      <div class="confirm-title">¡Reserva confirmada!</div>
+      <div class="confirm-sub" id="confirm-sub">Tu lugar está reservado. Mostrá el código al llegar.</div>
+    </div>
+
+    <div class="qr-wrap">
+      <div class="qr-code">
+        <div class="qr-pattern"></div>
+        <div class="qr-logo">🅿️</div>
+      </div>
+      <div class="qr-code-num" id="reserva-code">--</div>
+      <div class="qr-hint">Mostrá este código al encargado al llegar</div>
+    </div>
+
+    <div class="timer-wrap" id="timer-wrap" style="display:none">
+      <span>Tiempo reservado:</span>
+      <span class="timer-num" id="timer-display">02:00:00</span>
+    </div>
+
+    <div class="resumen-card" id="confirm-resumen" style="margin-top:4px"></div>
+
+    <button class="btn-main" onclick="irAlLugar()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+      Cómo llegar
+    </button>
+    <button class="btn-ghost" onclick="window.location.href='estacionapp.html'">Volver al mapa</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── DATOS DEL LUGAR (recibidos por URL params) ──────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const VEHICULO_COLORS = { auto:'#1A1F2E', moto:'#FF6B2B', 'bici-priv':'#7B5EA7', ecobici:'#00B4D8' };
+const VEHICULO_EMOJI  = { auto:'🚗', moto:'🏍️', 'bici-priv':'🚲' };
+const VEHICULO_LABEL  = { auto:'Auto', moto:'Moto', 'bici-priv':'Bicicleta' };
+
+// Parsear lugar desde URL
+let lugar;
+try { lugar = JSON.parse(decodeURIComponent(params.get('lugar') || '{}')); } catch(e) { lugar = {}; }
+
+// Defaults por si no viene bien
+if (!lugar.id) lugar = {
+  id:'p4', name:'Palermo Soho Parking', addr:'Thames 1650, Palermo',
+  lat:-34.5894, lng:-58.4215, libre:57, total:95,
+  tarifa:{auto:700, moto:380, 'bici-priv':200}, horario:'24hs', tipo:'Cubierto',
+  vehiculos:['auto','moto','bici-priv'], pagoenapp:true,
+  reserva:['inmediata','mismo-dia','anticipada'], calculo:'horas'
+};
+
+document.getElementById('h-name').textContent = lugar.name;
+document.getElementById('h-addr').textContent = lugar.addr;
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let currentStep = 1;
+let selectedVehiculo = null;
+let selectedReserva = null;
+let selectedMetodo = null;
+let horas = 2;
+let reservaCode = null;
+let timerInterval = null;
+let timerSeconds = 0;
+
+// ── STEP 1: RENDER ────────────────────────────────────────────────────────────
+function renderStep1() {
+  // Vehículos
+  const vgrid = document.getElementById('vehicle-grid');
+  const vehs = lugar.vehiculos.filter(v => v !== 'ecobici');
+  vgrid.innerHTML = vehs.map(v => `
+    <div class="vehicle-card ${v}" id="vc-${v}" onclick="selectVehiculo('${v}')">
+      <div class="vehicle-emoji">${VEHICULO_EMOJI[v]}</div>
+      <div class="vehicle-name">${VEHICULO_LABEL[v]}</div>
+      <div class="vehicle-price">$${lugar.tarifa[v]}/h</div>
+    </div>`).join('');
+  if (vehs.length === 1) selectVehiculo(vehs[0]);
+
+  // Tipos de reserva
+  const RESERVA_INFO = {
+    'inmediata':  { icon:'⚡', name:'Llegada directa',     desc:'Llegás sin reserva previa. El lugar queda libre para vos.' },
+    'mismo-dia':  { icon:'📅', name:'Reserva hoy',         desc:'Elegís hora de llegada para hoy. El lugar te espera.' },
+    'anticipada': { icon:'🗓️', name:'Reserva anticipada',  desc:'Reservá con días de anticipación.' },
+  };
+  const rlist = document.getElementById('reserva-list');
+  rlist.innerHTML = lugar.reserva.map(r => `
+    <div class="option-card" id="rc-${r}" onclick="selectReserva('${r}')">
+      <div class="option-ico" style="background:var(--bg)">${RESERVA_INFO[r].icon}</div>
+      <div class="option-body">
+        <div class="option-name">${RESERVA_INFO[r].name}</div>
+        <div class="option-desc">${RESERVA_INFO[r].desc}</div>
+      </div>
+      <div class="option-check"></div>
+    </div>`).join('');
+  if (lugar.reserva.length === 1) selectReserva(lugar.reserva[0]);
+}
+
+function selectVehiculo(v) {
+  selectedVehiculo = v;
+  document.querySelectorAll('.vehicle-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('vc-' + v)?.classList.add('selected');
+  updatePaso1Btn();
+}
+
+function selectReserva(r) {
+  selectedReserva = r;
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('rc-' + r)?.classList.add('selected');
+  updatePaso1Btn();
+}
+
+function updatePaso1Btn() {
+  document.getElementById('btn-paso1').disabled = !(selectedVehiculo && selectedReserva);
+}
+
+// ── STEP 2: HORARIO ──────────────────────────────────────────────────────────
+function renderStep2() {
+  const tarifa = lugar.tarifa[selectedVehiculo] || 0;
+  const esHoras = lugar.calculo === 'horas';
+  const esAnticipada = selectedReserva !== 'inmediata';
+
+  document.getElementById('calculo-hint').textContent =
+    esHoras ? 'Elegí cuántas horas estimás quedarte.' : 'El cobro se calcula al salir según el tiempo real.';
+
+  document.getElementById('horas-wrap').style.display = esHoras ? 'block' : 'none';
+  document.getElementById('datetime-wrap').style.display = esAnticipada ? 'block' : 'none';
+
+  // Fecha/hora defaults
+  if (esAnticipada) {
+    const now = new Date();
+    document.getElementById('dt-fecha').value = now.toISOString().split('T')[0];
+    document.getElementById('dt-hora').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }
+
+  document.getElementById('prev-tarifa').textContent = `$${tarifa}/h`;
+  document.getElementById('prev-label').textContent = `${VEHICULO_LABEL[selectedVehiculo]} · ${VEHICULO_EMOJI[selectedVehiculo]}`;
+  updateHorasPreview();
+}
+
+function cambiarHoras(delta) {
+  horas = Math.max(1, Math.min(12, horas + delta));
+  document.getElementById('horas-num').textContent = horas;
+  updateHorasPreview();
+}
+
+function updateHorasPreview() {
+  const esHoras = lugar.calculo === 'horas';
+  const tarifa = lugar.tarifa[selectedVehiculo] || 0;
+  const row = document.getElementById('prev-horas-row');
+  const prev = document.getElementById('prev-horas');
+  if (esHoras) {
+    row.style.display = 'flex';
+    prev.textContent = `${horas} hora${horas > 1 ? 's' : ''} · $${tarifa * horas}`;
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+// ── STEP 3: RESUMEN + PAGO ───────────────────────────────────────────────────
+function renderStep3() {
+  const tarifa = lugar.tarifa[selectedVehiculo] || 0;
+  const esHoras = lugar.calculo === 'horas';
+  const total = esHoras ? tarifa * horas : null;
+
+  const RESERVA_LABEL = { inmediata:'Llegada directa', 'mismo-dia':'Reserva hoy', anticipada:'Reserva anticipada' };
+
+  document.getElementById('resumen-detalle').innerHTML = `
+    <div class="resumen-row"><span class="resumen-label">Lugar</span><span class="resumen-val">${lugar.name}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Vehículo</span><span class="resumen-val">${VEHICULO_EMOJI[selectedVehiculo]} ${VEHICULO_LABEL[selectedVehiculo]}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Tipo</span><span class="resumen-val">${RESERVA_LABEL[selectedReserva]}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Tarifa</span><span class="resumen-val">$${tarifa}/h</span></div>
+    ${esHoras ? `<div class="resumen-row"><span class="resumen-label">Tiempo</span><span class="resumen-val">${horas}h estimadas</span></div>` : ''}
+  `;
+
+  document.getElementById('total-val').textContent = total ? `$${total}` : 'Al salir';
+
+  // Métodos de pago
+  const metodoWrap = document.getElementById('metodo-wrap');
+  const pagoLocalNota = document.getElementById('pago-local-nota');
+
+  if (lugar.pagoenapp) {
+    pagoLocalNota.style.display = 'none';
+    metodoWrap.style.display = 'block';
+    document.getElementById('metodo-list').innerHTML = `
+      <div class="metodo-card" id="m-mp" onclick="selectMetodo('mp')">
+        <div class="metodo-ico">💳</div>
+        <div class="metodo-body"><div class="metodo-name">Mercado Pago</div><div class="metodo-sub">Tarjeta, débito o saldo MP</div></div>
+        <div class="metodo-check"></div>
+      </div>
+      <div class="metodo-card" id="m-local" onclick="selectMetodo('local')">
+        <div class="metodo-ico">🏪</div>
+        <div class="metodo-body"><div class="metodo-name">Pago en el local</div><div class="metodo-sub">Efectivo o POS al llegar</div></div>
+        <div class="metodo-check"></div>
+      </div>`;
+  } else {
+    metodoWrap.style.display = 'none';
+    pagoLocalNota.style.display = 'flex';
+    selectedMetodo = 'local';
+  }
+}
+
+function selectMetodo(m) {
+  selectedMetodo = m;
+  document.querySelectorAll('.metodo-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('m-' + m)?.classList.add('selected');
+}
+
+// ── CONFIRMAR ────────────────────────────────────────────────────────────────
+function confirmarReserva() {
+  if (lugar.pagoenapp && !selectedMetodo) { showToast('Elegí un método de pago'); return; }
+
+  if (selectedMetodo === 'mp') {
+    showToast('Conectando con Mercado Pago...');
+    setTimeout(() => procesarPago(), 1500);
+  } else {
+    procesarPago();
+  }
+}
+
+function procesarPago() {
+  reservaCode = Math.floor(100000 + Math.random() * 900000).toString();
+  goStep(4);
+  renderStep4();
+}
+
+// ── STEP 4: CONFIRMACIÓN ─────────────────────────────────────────────────────
+function renderStep4() {
+  document.getElementById('reserva-code').textContent = reservaCode;
+
+  const tarifa = lugar.tarifa[selectedVehiculo] || 0;
+  const esHoras = lugar.calculo === 'horas';
+  const METODO_LABEL = { mp:'Mercado Pago', local:'Pago en el local' };
+  const RESERVA_LABEL = { inmediata:'Llegada directa', 'mismo-dia':'Reserva hoy', anticipada:'Reserva anticipada' };
+
+  document.getElementById('confirm-sub').textContent =
+    selectedMetodo === 'local'
+      ? 'Mostrá el código al encargado al llegar. Pagás en el local.'
+      : '¡Pago procesado! Mostrá el código al encargado al llegar.';
+
+  document.getElementById('confirm-resumen').innerHTML = `
+    <div class="resumen-row"><span class="resumen-label">Código</span><span class="resumen-val" style="font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:2px">${reservaCode}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Lugar</span><span class="resumen-val">${lugar.name}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Vehículo</span><span class="resumen-val">${VEHICULO_EMOJI[selectedVehiculo]} ${VEHICULO_LABEL[selectedVehiculo]}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Tipo</span><span class="resumen-val">${RESERVA_LABEL[selectedReserva]}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Pago</span><span class="resumen-val">${METODO_LABEL[selectedMetodo] || 'En el local'}</span></div>
+    ${esHoras ? `<div class="resumen-row"><span class="resumen-label">Total</span><span class="resumen-val" style="color:var(--accent);font-weight:700">$${tarifa * horas}</span></div>` : ''}
+  `;
+
+  // Timer si es pago en app con horas fijas
+  if (selectedMetodo === 'mp' && esHoras) {
+    timerSeconds = horas * 3600;
+    document.getElementById('timer-wrap').style.display = 'flex';
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+}
+
+function updateTimer() {
+  if (timerSeconds <= 0) { clearInterval(timerInterval); return; }
+  timerSeconds--;
+  const h = Math.floor(timerSeconds / 3600);
+  const m = Math.floor((timerSeconds % 3600) / 60);
+  const s = timerSeconds % 60;
+  document.getElementById('timer-display').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function irAlLugar() {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lugar.lat},${lugar.lng}&travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function goStep(n) {
+  if (n === 2 && !(selectedVehiculo && selectedReserva)) { showToast('Elegí vehículo y tipo de reserva'); return; }
+  if (n === 3) renderStep3();
+  if (n === 2) renderStep2();
+
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  currentStep = n;
+  updateStepsBar();
+
+  // Back button
+  document.getElementById('back-btn').onclick = n > 1
+    ? () => goStep(n - 1)
+    : () => window.location.href = 'estacionapp.html';
+}
+
+function updateStepsBar() {
+  for (let i = 1; i <= 4; i++) {
+    const circle = document.getElementById('sc-' + i);
+    if (i < currentStep) { circle.className = 'step-circle done'; circle.textContent = '✓'; }
+    else if (i === currentStep) { circle.className = 'step-circle active'; circle.textContent = i; }
+    else { circle.className = 'step-circle'; circle.textContent = i; }
+    if (i < 4) {
+      const line = document.getElementById('sl-' + i);
+      if (line) line.className = i < currentStep ? 'step-line done' : 'step-line';
+    }
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+renderStep1();
+updatePaso1Btn();
+
+// Fecha default para datetime
+const now = new Date();
+const pad = n => String(n).padStart(2, '0');
+document.getElementById('dt-fecha').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+document.getElementById('dt-hora').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+</script>
+</body>
+</html>
